@@ -32,6 +32,7 @@
 /* global Application, oipfObjectFactory, oipfApplicationManager, oipfConfiguration, oipfCapabilities */
 
 (function(window) {
+    console.log("Test");
     // If the extension is not activated for this web page then we do nothing and wait for the user to click on the extension icon ...
     var pageActivated = window.localStorage.getItem('tvViewer_active') == 'true';
     if (pageActivated) {
@@ -51,7 +52,8 @@
                 mimeType === 'application/oipfConfiguration' ||
                 mimeType === 'application/oipfDrmAgent' ||
                 mimeType === 'application/oipfParentalControlManager' ||
-                mimeType === 'application/oipfSearchManager';
+                mimeType === 'application/oipfSearchManager' ||
+                mimeType === 'application/hbbtvMediaSwitcher';
             };
             oipfObjectFactory.createVideoBroadcastObject = function() {
                 console.timeStamp && console.timeStamp('createVideoBroadcastObject'); //console.log('createVideoBroadcastObject() ...');
@@ -152,6 +154,7 @@
             keyset.setValue = function(value) {
                 keyset.value = value;
             };
+            
             Object.defineProperties(Application.prototype.privateData, {
                 '_document': {
                     value: null,
@@ -169,6 +172,8 @@
                     }
                 }
             });
+            
+
             Application.prototype.privateData.getFreeMem = function() {
                 console.timeStamp && console.timeStamp('Application.getFreeMem');
                 return ((window.performance && window.performance.memory.usedJSHeapSize) || 0);
