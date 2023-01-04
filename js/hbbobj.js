@@ -802,6 +802,11 @@
         }
     }
 
+    
+    function switchMediaPresentation(originalMediaObject, newMediaObject){
+
+    }
+
     // just add a listener on new <OBJECT> tags that will be animated when newly created ...
     window.document.addEventListener(window.CSS.supports('animation', '0s') ? 'animationstart' : 'webkitAnimationStart', onAnimationStart, true);
 

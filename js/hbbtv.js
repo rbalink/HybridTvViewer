@@ -32,8 +32,8 @@
 /* global Application, oipfObjectFactory, oipfApplicationManager, oipfConfiguration, oipfCapabilities */
 
 (function(window) {
-    console.log("Test");
     // If the extension is not activated for this web page then we do nothing and wait for the user to click on the extension icon ...
+    console.log("HERE BLABLABLA TEST");
     var pageActivated = window.localStorage.getItem('tvViewer_active') == 'true';
     if (pageActivated) {
         console.log('injecting %c HbbTV %c %s ','color:#fff;background-color:#555555;border-radius:3px 0 0 3px;','color:#000;background-color:#ffc107;border-radius:0 3px 3px 0;',window.localStorage.getItem('tvViewer_hbbtv'));
@@ -137,6 +137,25 @@
             }
             Application.prototype.visible = undefined;
             Application.prototype.privateData = {};
+            Application.prototype.privateData.currentChannel = {
+
+                ccid: null,
+
+                channelType: 0,
+
+                dsd: null,
+
+                idType: 11,
+
+                name: "Das Erste HD",
+
+                onid: "1",
+
+                sid: "10301",
+
+                tsid: "1019",
+
+            }
             Application.prototype.privateData.keyset = {};
             var keyset = Application.prototype.privateData.keyset;
             keyset.RED = 0x1;
