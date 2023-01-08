@@ -21,7 +21,7 @@
         //import { oipfBroadcastVideoMethods } from './videobc.mjs'; // FireFox 60+ -> https://jakearchibald.com/2017/es-modules-in-browsers/
         //oipfBroadcastVideoMethods(oipfPluginObject);
 
-        //oipfPluginObject = window.oipfBroadcastVideoObject; // pre-loaded by videobc.js for ES5 browser compatibility
+        //oipfPluginObject = window.oipfBroadcastbroadcastObject; // pre-loaded by videobc.js for ES5 browser compatibility
 
         var currentChannel = {
             'TYPE_TV': 12,
@@ -802,11 +802,168 @@
         }
     }
 
-    
-    function switchMediaPresentation(originalMediaObject, newMediaObject){
+
+
+    function NotSupportedError(){
+        this.name = "NotSupportedError";
+    }
+
+
+    /*
+    specification of switchMediaPresentation according to ETSI TS 103 736-1 V1.1.1 (2020-06)
+    // originalMediaObject: video/broadcast object or HTML5 video element
+    // timelineSelector: URN identifying a timeline or null which indicates a switch to happen
+    // timelineSource: true: timeline is carried in originalMediaObject, false: timeline is in newMediaObject
+    // switchTime: if timelineSelector is URN, this defines time in seconds when switch from originalMediaObject to newMediaObject, if null: irrelevant
+    // newMediaObjec: video/broadcast object or HTML5 video element
+    // minimumSwitchPerformanceRequired: zero or one performance profiles that apply to the switch, if zero: empty string, if profile: URN included
+    // return promise: does that mean, calling the promise again, or letting the promise open? like pending?
+    */
+    function switchMediaPresentation(originalMediaObject, timelineSelector, timelineSource, switchTime, newMediaObject, minimumSwitchPerformanceRequired){
+        return new Promise((resolve, reject) => {
+
+            /*
+            // notes/questions:
+            input for "newMediaObject" is unclear --> structure of video/broadcast and html5 same?
+            what is the tag for html5 video/elements? ('html5video')
+            is state always readyState? Or are there different states??
+            is "hidden (true/false)" actually the CSS visibility?
+            what are the actual statements of readyState (stopped, HAVE_FUTURE_DATA, presenting etc)
+            is "onseeking" the actual "seeking" attribute??
+            TODO: Read clause 10.2
+            URN = is oipf.ownerDocument.timeline.currentTime: 436653.845 an URN???
+            Step 3 unclear: check inside the Promise, if the Promise was called before? Is this possible inside a Promise?
+            Step 4 unclear: return Promise inside a Promise??
+            Step 5 unclear: async monitoring?
+            Step 7 unclear: What is switch preparation deadline? How to calculate
+            */
+            console.log(originalMediaObject.type);
+            console.log(this.promise);
+            
+            if(!(originalMediaObject.type == 'video/broadcast' || originalMediaObject.type == 'html5video')){
+                reject('NotSupportedError');
+            }
+
+            console.log(originalMediaObject.ownerDocument.readyState);
+            if(originalMediaObject.type == 'video/broadcast'){
+                if(!((originalMediaObject.ownerDocument.readyState == 'presenting') &&(originalMediaObject.type == 'html5video'))){
+                    reject('NotSupportedError');
+                }
+            }
+
+            if(originalMediaObject.type == 'html5video'){
+                if(!(((newMediaObject == 'video/broadcast') || (newMediaObject == 'html5video')) && ((originalMediaObject.ownerDocument.readyState == 'HAVE_FUTURE_DATA') || (originalMediaObject.ownerDocument.readyState == 'HAVE_FUTURE_DATA'))) ){
+                    reject('NotSupportedError');
+                }
+            }
+
+            if(newMediaObject.type == 'video/broadcast'){
+                if(!(newMediaObject.ownerDocument.visibility == 'true' && ((newMediaObject.ownerDocument.readyState == 'stopped') ||(newMediaObject.ownerDocument.readyState == 'presenting')))){
+                    reject('NotSupportedError');
+                }
+            }
+
+            if(newMediaObject.type == 'html5video'){
+                if(!(newMediaObject.ownerDocument.readyState == 'HAVE_ENOUGH_DATA')){
+                    reject('NotSupportedError');
+                }
+            }
+
+            if(newMediaObject.type == 'html5video'){
+                if(!(newMediaObject.ownerDocument.onseeking == 'false')){
+                    reject('NotSupportedError');
+                }
+            }
+
+            if(timelineSource == 'true'){
+                //TODO: see 10.2 definition for supported
+                if(!((timelineSelector == 'null') || (timelineSelector == 'TODO' ))){
+                    reject('NotSupportedError');
+                }
+            }
+
+            if(timelineSource == 'false'){
+                //TODO: see 10.2 definition for supported
+                if(!(timelineSelector == 'TODO')){
+                    reject('NotSupportedError');
+                }
+            }
+
+            if(timelineSource == 'null'){
+                if(!(originalMediaObject.type == 'html5video')){
+                    reject('NotSupportedError');
+                }
+            }
+
+            if(!(originalMediaObject.parentElement == newMediaObject.parentElement)){
+                reject('NotSupportedError');
+            }
+            
+            /*
+            //TODO: 
+            Either originalMediaObject is immediately in front of newMediaObject on the CSS z-axis or
+            originalMediaObject is immediately behind newMediaObject on the CSS z-axis and the latter has
+            its CSS visibility set to hidden.
+            */
+            if(!('TODO'=='TODO')){
+                reject('NotSupportedError');
+            }
+
+            //TODO: one of the URNs included in a profile element in the ta element (see clause 10.3.1).
+            if(!((minimumSwitchPerformanceRequired == null) ||(minimumSwitchPerformanceRequired == 'TODO'))){
+
+            }
+
+            // 3) if promise was already called and is in pending
+            // check if other promise is alive
+            // TODO read Promise pending + behaviour for .then
+
+            // 4)
+            // maybe structure of this Promise has to change?
+            if(timelineSelector == null){
+                return Promise;
+            }
+
+            // 5)
+            // asynch monitoring timeline indicated by timelineSelector - if timelineSource true - then terminal will be monitoring timeline
+            // TEMI?
+
+
+            // 6)
+            // TODO switchTime 4.2.1 clause
+            if(timelineSelector != null && switchTime == 'TODO'){
+                resolve(InThePast);
+            }
+
+            // 7) if current time is after switch preparation deadline (?)
+            // TODO: what is switch preparation deadline (?)
+            let switchPreparationDeadline = 0;
+
+            if(Date.now() > switchPreparationDeadline){
+                resolve(switchPreparationDeadlinePassed);
+            }
+
+            // 8)
+            // Asynchronously invoke the algorithm for attempting to allocate suitable video and audio decoders for newMediaObject
+
+
+            // 9)
+            // same as 4), maybe Promise structure has to change?
+
+        })
+
 
     }
 
+    NotSupportedError.prototype = Error.prototype;
+    //call the method/promise
+    switchMediaPresentation(window.oipf.videoObject,null,null,null,null,null).then((msg) => {
+        console.log('Success Promise: '+ msg) 
+    }).catch((error) =>{
+        console.log('Error Promise '+ error)
+    })
+
+    
     // just add a listener on new <OBJECT> tags that will be animated when newly created ...
     window.document.addEventListener(window.CSS.supports('animation', '0s') ? 'animationstart' : 'webkitAnimationStart', onAnimationStart, true);
 
