@@ -1,9 +1,18 @@
 /** Listen to external <OBJECT> dynamic changes ... */
 (function(window) {
-    var _DEBUG_ = false;
+    var _DEBUG_ = true;
 
+    // Ads the video
+    // Is being run
     function injectBroadcastVideoMethods(oipfPluginObject) {
+
         var isVideoPlayerAlreadyAdded = oipfPluginObject.children.length > 0;
+
+        // oipfPluginObject is the video object with HTML video in it
+        console.log("obj",oipfPluginObject)
+        console.log("obj + child",oipfPluginObject.children)
+        console.log("obj + child + length",oipfPluginObject.children)
+
         if (!isVideoPlayerAlreadyAdded) {
             var videoTag = document.createElement('video');
             videoTag.setAttribute('id', 'video-player');
@@ -16,6 +25,7 @@
             _DEBUG_ && console.info('BROADCAST VIDEO PLAYER ... ADDED');
         }
 
+        
         // inject OIPF methods ...
 
         //import { oipfBroadcastVideoMethods } from './videobc.mjs'; // FireFox 60+ -> https://jakearchibald.com/2017/es-modules-in-browsers/
@@ -33,22 +43,31 @@
             'ccid': 'ccid:dvbt.0',
             'dsd': ''
         };
+
         oipfPluginObject.currentChannel = currentChannel;
+
+        console.log('hi')
+
         oipfPluginObject.createChannelObject = function() {
             console.timeStamp && console.timeStamp('bcVideo.createChannelObject');
         };
+
         oipfPluginObject.bindToCurrentChannel = function() {
+            console.log('current channel')
             console.timeStamp && console.timeStamp('bcVideo.bindToCurrentChannel');
             var player = document.getElementById('video-player');
+            console.log('player', player)
             if (player) {
                 player.play();
                 // TODO: If there is no channel currently being presented, the OITF SHALL dispatch an event to the onPlayStateChange listener(s) whereby the state parameter is given value 0 (“ unrealized ")
             }
             return ; // TODO: must return a Channel object
         };
+
         oipfPluginObject.setChannel = function() {
             console.timeStamp && console.timeStamp('bcVideo.setChannel');
         };
+
         oipfPluginObject.prevChannel = function() {
             console.timeStamp && console.timeStamp('bcVideo.prevChannel');
             return currentChannel;
@@ -207,6 +226,9 @@
         //     objectElement.playPosition = p;
         //
         // };
+
+        console.log(objectElement)
+        console.log('cummm')
         objectElement.play = objectElement.play || function(speed) {
             speed = typeof speed == 'number' ? speed : 1;
             _DEBUG_ && console.log('>>>>>> play with speed= ', speed);
@@ -650,10 +672,13 @@
      * @param {object} elem An object element to analyse.
      */
     function watchObject(elem) {
+        // mimeType means MEDIA TYPE
         var mimeType = elem.type;
         _DEBUG_ && console.log('object mimetype=' + mimeType);
-
+        
+        console.log('cum', elem.firstChild.src)
         mimeType = mimeType.toLowerCase(); // ensure lower case string comparison
+
         var srcAttribute = 'src' in elem ? 'src' : 'data'; // data attribute is most of time used
         var videoPath = elem[srcAttribute];
         _DEBUG_ && console.log('object url=' + videoPath);
@@ -726,6 +751,7 @@
 
         } else if (mimeType.lastIndexOf('video/broadcast', 0) == 0) {
             _DEBUG_ && console.warn('LIVE BROADCAST VIDEO PLAYER ...');
+            console.log('elem after detection', elem)
             injectBroadcastVideoMethods(elem);
 
         } else if (mimeType.lastIndexOf('application/oipfConfiguration', 0) == 0) {
@@ -796,11 +822,21 @@
     }
 
     function onAnimationStart(event) {
-        _DEBUG_ && console.info('object: ', event);
+        _DEBUG_ && console.info('on animation start object: ', event);
+
         if ('detected-object' === event.animationName) {
+            console.log("event.target inside onAnimationStart", event.target)
+            // event.target.firstChild.setAttribute('src', 'http://techslides.com/demos/sample-videos/small.mp4');
             watchObject(event.target);
         }
     }
+   
+    // addEventListener -> sets up a function that will be called whenever the specified event is delivered to the target.
+    // first parameter is type -> animationstart or webkitAnimationStart in this case
+    // second is the event
+    // third is about bubbling
+
+    // The CSS.supports() method returns a boolean value indicating if the browser supports a given CSS feature, or not.
 
     // just add a listener on new <OBJECT> tags that will be animated when newly created ...
     window.document.addEventListener(window.CSS.supports('animation', '0s') ? 'animationstart' : 'webkitAnimationStart', onAnimationStart, true);
