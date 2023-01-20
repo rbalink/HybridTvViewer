@@ -98,6 +98,9 @@
                 };
                 //return new VideoMpegObject();
             };
+            oipfObjectFactory.createMediaSwitchAPI = function(){
+                console.log("Test Object Factory");
+            };
             oipfObjectFactory.onLowMemory = function() {
                 console.timeStamp && console.timeStamp('onLowMemory');
                 // FIXME: see when we can generate this event (maybe inside the Web Inspector panel)
@@ -357,6 +360,12 @@
 
 
         // 7.16.5 Extensions for playback of selected media components -----------------
+
+        // 8.1. FastMediaSwitcher API - ETSI TS 103 736-1 V1.1.1 (2020-06)
+
+        (function(hbbtvMediaSwitcher){
+            hbbtvMediaSwitcher.test = "test";
+        })(window.hbbtvMediaSwitcher || (window.hbbtvMediaSwitcher = {}));
 
 
         // Listening to external messages ----------------------------------------------
