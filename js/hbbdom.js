@@ -377,51 +377,13 @@ if (pageActivated) {
                     oipfPluginObject.createChannelObject = function() {
                         console.timeStamp && console.timeStamp('bcVideo.createChannelObject');
                     };
-
                     oipfPluginObject.bindToCurrentChannel = function() {
                         console.timeStamp && console.timeStamp('bcVideo.bindToCurrentChannel');
-                        
                         var player = document.getElementById('video-player');
-                        player.play()
-                        time = 6;
-
-                        var switchAdAt = function(player, switchTime, listenerToRemove){
-                            console.log(player.currentTime)
-                            if(player.currentTime >= switchTime){
-                                player.src = 'http://techslides.com/demos/sample-videos/small.mp4'
-                                player.play()
-                                if(typeof listenerToRemove === "function"){
-                                    player.removeEventListener('timeupdate', listenerToRemove);
-                                }
-                            }   
+                        if (player) {
+                            player.play();
                         }
-                        player.addEventListener("timeupdate", function listener1() {
-                            switchAdAt(player, time, listener1);
-                        });
-                        
-
-                        player.addEventListener('ended', (event) => {
-                            player.src = 'http://clips.vorwaerts-gmbh.de/VfE_html5.mp4#t=' + time ;
-                            player.play()
-                        });
-                        
-
-
-                        /*  player.addEventListener("timeupdate", function(){
-                            console.log(player.currentTime)
-                            if(this.currentTime >= ad2Ta) {
-                               player.src = 'http://techslides.com/demos/sample-videos/small.mp4'
-                               player.play()
-                            }
-                        }); */
-
-                        
-                        /* if (player) {
-                            console.log('play')
-                                // player.play();
-                        }*/
                     };
-
                     oipfPluginObject.setChannel = function() {
                         console.timeStamp && console.timeStamp('bcVideo.setChannel');
                     };
@@ -590,20 +552,14 @@ if (pageActivated) {
                 // if video is broadcast or broadband one ... do the in-common video player injection ...
                 if (isBroadcastVideo(sType) || isBroadbandVideo(sType)) {
                     var isVideoPlayerAlreadyAdded = oipfPluginObject.children.length > 0;
-                    
                     if (!isVideoPlayerAlreadyAdded) {
                         var videoTag = document.createElement('video');
                         videoTag.setAttribute('id', 'video-player');
                         //videoTag.setAttribute('autoplay', ''); // note: call to bindToCurrentChannel() or play() is doing it
-                        // videoTag.setAttribute('loop', '');
+                        videoTag.setAttribute('loop', '');
                         videoTag.setAttribute('muted', 'true');
                         videoTag.setAttribute('style', 'top:inherit; left:inherit; width:inherit; height:inherit;');
-                        videoTag.src = 'http://clips.vorwaerts-gmbh.de/VfE_html5.mp4';
-                        
-                        // original code
-                        // videoTag.src = localStorage.getItem('tvViewer_broadcast_url') || 'http://clips.vorwaerts-gmbh.de/VfE_html5.mp4';
-                        console.log('oipfPluginObject', oipfPluginObject)
-
+                        videoTag.src = localStorage.getItem('tvViewer_broadcast_url') || 'http://clips.vorwaerts-gmbh.de/VfE_html5.mp4';
                         oipfPluginObject.appendChild(videoTag);
                         //console.info('BROADCAST OR BROADBAND VIDEO PLAYER ... ADDED');
                     }
