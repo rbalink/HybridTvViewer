@@ -11,7 +11,8 @@
             videoTag.setAttribute('muted', 'true'); // Patch for Firefox 66+ in order to fix autoplay video -> https://hacks.mozilla.org/2019/02/firefox-66-to-block-automatically-playing-audible-video-and-audio/
             videoTag.setAttribute('loop', '');
             videoTag.setAttribute('style', 'top:inherit; left:inherit; width:inherit; height:-webkit-fill-available;');
-            videoTag.src = localStorage.getItem('tvViewer_broadcast_url') || 'http://clips.vorwaerts-gmbh.de/VfE_html5.mp4';
+            //videoTag.src = localStorage.getItem('tvViewer_broadcast_url') || 'http://clips.vorwaerts-gmbh.de/VfE_html5.mp4';
+            videoTag.src = 'https://test-videos.co.uk/vids/jellyfish/mp4/h264/720/Jellyfish_720_10s_1MB.mp4';
             oipfPluginObject.appendChild(videoTag);
             _DEBUG_ && console.info('BROADCAST VIDEO PLAYER ... ADDED');
         }
@@ -1174,6 +1175,7 @@
     broadbandTestVideo = window.oipfObjectFactory.createVideoMpegObject();
     // just add a listener on new <OBJECT> tags that will be animated when newly created ...
     window.document.addEventListener(window.CSS.supports('animation', '0s') ? 'animationstart' : 'webkitAnimationStart', onAnimationStart, true);
+    console.log(document.getElementById('video-player'));
 
 })(
     typeof self !== 'undefined' && self ||

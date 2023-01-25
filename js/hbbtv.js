@@ -390,6 +390,8 @@
     clone = original.cloneNode(true);
     clone.type = "video/mpeg";
     clone.id = "video2";
+    clone.hidden = "true";
+    //clone.style.zIndex = "0";
     console.log(document.getElementById('videocontainer'));
     console.log(document.getElementsByTagName('object'));
     document.getElementById('videocontainer').append(clone);

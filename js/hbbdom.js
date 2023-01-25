@@ -551,20 +551,27 @@ if (pageActivated) {
 
                 // if video is broadcast or broadband one ... do the in-common video player injection ...
                 if (isBroadcastVideo(sType) || isBroadbandVideo(sType)) {
+                    console.log(document.getElementById('video-player'));
+                    console.log(document.getElementById('video-player2'));
                     var isVideoPlayerAlreadyAdded = oipfPluginObject.children.length > 0;
                     if (!isVideoPlayerAlreadyAdded) {
                         var videoTag = document.createElement('video');
-                        videoTag.setAttribute('id', 'video-player');
+                        
                         //videoTag.setAttribute('autoplay', ''); // note: call to bindToCurrentChannel() or play() is doing it
                         videoTag.setAttribute('loop', '');
                         videoTag.setAttribute('muted', 'true');
                         videoTag.setAttribute('style', 'top:inherit; left:inherit; width:inherit; height:inherit;');
                         if(isBroadcastVideo(sType)){
-                            videoTag.src = localStorage.getItem('tvViewer_broadcast_url') || 'http://clips.vorwaerts-gmbh.de/VfE_html5.mp4';
+                            videoTag.setAttribute('id', 'video-player');
+                            videoTag.src = 'http://clips.vorwaerts-gmbh.de/VfE_html5.mp4' // || localStorage.getItem('tvViewer_broadcast_url'); http://clips.vorwaerts-gmbh.de/VfE_html5.mp4
                         }else if(isBroadbandVideo(sType)){
-                            videoTag.src = localStorage.getItem('tvViewer_broadcast_url') || 'https://test-videos.co.uk/vids/jellyfish/mp4/h264/720/Jellyfish_720_10s_1MB.mp4';
+                            videoTag.setAttribute('id', 'video-player2');
+                            videoTag.src =  'https://test-videos.co.uk/vids/jellyfish/mp4/h264/720/Jellyfish_720_10s_1MB.mp4' // || localStorage.getItem('tvViewer_broadcast_url');
                         }
                         oipfPluginObject.appendChild(videoTag);
+                            
+                    console.log(document.getElementById('video-player'));
+                    console.log(document.getElementById('video-player2'));
                         //console.info('BROADCAST OR BROADBAND VIDEO PLAYER ... ADDED');
                     }
                     // observe this tag for attribute data changes ...
