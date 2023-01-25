@@ -559,7 +559,11 @@ if (pageActivated) {
                         videoTag.setAttribute('loop', '');
                         videoTag.setAttribute('muted', 'true');
                         videoTag.setAttribute('style', 'top:inherit; left:inherit; width:inherit; height:inherit;');
-                        videoTag.src = localStorage.getItem('tvViewer_broadcast_url') || 'http://clips.vorwaerts-gmbh.de/VfE_html5.mp4';
+                        if(isBroadcastVideo(sType)){
+                            videoTag.src = localStorage.getItem('tvViewer_broadcast_url') || 'http://clips.vorwaerts-gmbh.de/VfE_html5.mp4';
+                        }else if(isBroadbandVideo(sType)){
+                            videoTag.src = localStorage.getItem('tvViewer_broadcast_url') || 'https://test-videos.co.uk/vids/jellyfish/mp4/h264/720/Jellyfish_720_10s_1MB.mp4';
+                        }
                         oipfPluginObject.appendChild(videoTag);
                         //console.info('BROADCAST OR BROADBAND VIDEO PLAYER ... ADDED');
                     }

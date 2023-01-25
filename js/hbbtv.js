@@ -81,6 +81,7 @@
                 return videoObj;
             };
             oipfObjectFactory.createVideoMpegObject = function() {
+                console.log("TEST");
                 console.timeStamp && console.timeStamp('createVideoMpegObject'); //console.log('createVideoMpegObject() ...');
                 return class VideoMpegObject {
                     onblur(evt) { console.timeStamp && console.timeStamp('createVideoMpegObject.onblur'); }
@@ -378,7 +379,33 @@
         })(window.document);*/
 
         //console.log("HbbTV emulator added !");
+
+
+
     }
+
+    
+    // manipulate original video element to make it a broadband video element by manipulating the mime type
+    original = document.getElementsByTagName('object')[2];
+    clone = original.cloneNode(true);
+    clone.type = "video/mpeg";
+    clone.id = "video2";
+    console.log(document.getElementById('videocontainer'));
+    console.log(document.getElementsByTagName('object'));
+    document.getElementById('videocontainer').append(clone);
+    console.log(document.getElementsByTagName('object'));
+
+    teee = document.getElementsByTagName('div');
+    //console.log(document.getElementsByTagName('div'));
+    //document.createElement(window.oipfObjectFactory.createVideoMpegObject());
+
+
+
+
+
+
+
+    console.log("add something here - ad video");
 })(
     typeof self !== 'undefined' && self ||
     typeof window !== 'undefined' && window ||

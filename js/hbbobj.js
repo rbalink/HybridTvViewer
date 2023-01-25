@@ -650,6 +650,8 @@
      * @param {object} elem An object element to analyse.
      */
     function watchObject(elem) {
+        
+        console.log("WATCH OBJECT");
         var mimeType = elem.type;
         _DEBUG_ && console.log('object mimetype=' + mimeType);
 
@@ -699,7 +701,9 @@
 
             registerEmbeddedVideoPlayerEvents(elem, videoTag); // videoTag = undefined when using a PHP link (i.e. scanning for inner video tag)
 
-        } else if (mimeType.lastIndexOf('video/mpeg', 0) == 0 && muxjs) {
+            //muxjs ausgeklammert
+        } else if (mimeType.lastIndexOf('video/mpeg', 0) == 0) {
+            console.log("BROADBAND VIDEO PLAYER");
             _DEBUG_ && console.warn('TS VIDEO PLAYER ...');
             /*var videoTag = document.createElement('video');
             videoTag.setAttribute('id', 'ts-player');
@@ -725,6 +729,7 @@
             });*/
 
         } else if (mimeType.lastIndexOf('video/broadcast', 0) == 0) {
+            console.log("BROADCAST VIDEO PLAYER");
             _DEBUG_ && console.warn('LIVE BROADCAST VIDEO PLAYER ...');
             injectBroadcastVideoMethods(elem);
 
@@ -796,6 +801,7 @@
     }
 
     function onAnimationStart(event) {
+        console.log("ON ANIMATION START");
         _DEBUG_ && console.info('object: ', event);
         if ('detected-object' === event.animationName) {
             watchObject(event.target);
@@ -1163,9 +1169,9 @@
     NotSupportedError.prototype = Error.prototype;
 
     //call the method
-    switchMediaPresentation(window.oipf.videoObject,null,null,null,null,null);
+    //switchMediaPresentation(window.oipf.videoObject,null,null,null,null,null);
 
-    
+    broadbandTestVideo = window.oipfObjectFactory.createVideoMpegObject();
     // just add a listener on new <OBJECT> tags that will be animated when newly created ...
     window.document.addEventListener(window.CSS.supports('animation', '0s') ? 'animationstart' : 'webkitAnimationStart', onAnimationStart, true);
 
