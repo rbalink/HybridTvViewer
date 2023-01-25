@@ -32,6 +32,8 @@
 /* global Application, oipfObjectFactory, oipfApplicationManager, oipfConfiguration, oipfCapabilities */
 
 (function(window) {
+
+
     // If the extension is not activated for this web page then we do nothing and wait for the user to click on the extension icon ...
     console.log("HERE BLABLABLA TEST");
     var pageActivated = window.localStorage.getItem('tvViewer_active') == 'true';
@@ -133,7 +135,10 @@
 
         // 7.2.2  The Application class ------------------------------------------------
 
-        window.Application = {};
+        window.Application = {
+
+
+        };
         (function(window) {
             function Application(doc) {
                 this._document = doc;
