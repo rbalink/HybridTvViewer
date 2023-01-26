@@ -829,6 +829,41 @@
     */
     function switchMediaPresentation(originalMediaObject, timelineSelector, timelineSource, switchTime, newMediaObject, minimumSwitchPerformanceRequired){
         var called = false;
+        console.log(originalMediaObject.firstChild);
+        console.log(newMediaObject.firstChild);
+        setTimeout(function(){
+            console.log("First switch");
+            videoplayer = originalMediaObject.firstChild;
+            videoplayer.muted = true;
+            originalMediaObject.style.zIndex = "3";
+            //originalMediaObject.firstChild.mute();
+    
+            videoplayer2 = newMediaObject.firstChild;
+            newMediaObject.style.zIndex = "7";
+            videoplayer2.play();
+            videoplayer2.muted = false;
+
+
+            setTimeout(function(){
+                console.log("Second switch back");
+                videoplayer = originalMediaObject.firstChild;
+                videoplayer.muted = false;
+                originalMediaObject.style.zIndex = "5";
+                //originalMediaObject.firstChild.mute();
+        
+                videoplayer2 = newMediaObject.firstChild;
+                newMediaObject.style.zIndex = "0";
+                videoplayer2.pause();
+                videoplayer2.muted = true;
+            }, 10000);
+
+
+
+        }, 10000);
+        
+
+
+
         //return new Promise((resolve, reject) =>
         const hbbPromise = new Promise((resolve, reject) => {
 
@@ -1167,15 +1202,24 @@
     }
 
     // just for testing / not important
-    NotSupportedError.prototype = Error.prototype;
+    //NotSupportedError.prototype = Error.prototype;
 
     //call the method
-    //switchMediaPresentation(window.oipf.videoObject,null,null,null,null,null);
 
     broadbandTestVideo = window.oipfObjectFactory.createVideoMpegObject();
     // just add a listener on new <OBJECT> tags that will be animated when newly created ...
     window.document.addEventListener(window.CSS.supports('animation', '0s') ? 'animationstart' : 'webkitAnimationStart', onAnimationStart, true);
     console.log(document.getElementById('video-player'));
+    console.log(document.getElementById('video'));
+    console.log(document.getElementById('video2'));
+
+    //timelineSelector == URN
+    //timelineSource == boolean ob in newMediaObject timeline inside
+    //switchTime == if URN its the switch time else null
+    //minimumSwitchPerformanceRequired == performance profile
+
+    //originalMediaObject, timelineSelector, timelineSource, switchTime, newMediaObject, minimumSwitchPerformanceRequired
+    switchMediaPresentation(document.getElementById('video'),null,null,null,document.getElementById('video2'),null);
 
 })(
     typeof self !== 'undefined' && self ||

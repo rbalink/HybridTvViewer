@@ -529,6 +529,7 @@ if (pageActivated) {
                     oipfPluginObject.removeEventListener = function(type, listener, capture) {
                     };
                     //console.info('BROADCAST VIDEO PLAYER ...');
+                    console.log("BROADCAST TV VIDEO DONE");
 
                 } else if (isBroadbandVideo(sType)) {
                     //console.info('BROADBAND VIDEO PLAYER ...');
@@ -547,6 +548,8 @@ if (pageActivated) {
                     oipfPluginObject.onPlayStateChange = (function(s) { console.timeStamp && console.timeStamp('bbVideo.playStateChange='+s); this.playState = s; }).bind(oipfPluginObject);
                     oipfPluginObject.onPlayPositionChanged = (function(p) { console.timeStamp && console.timeStamp('bbVideo.positionChange='+s); this.playPosition = p; }).bind(oipfPluginObject);
                     oipfPluginObject.onPlaySpeedChanged = (function(s) { console.timeStamp && console.timeStamp('bbVideo.positionChange='+s); this.speed = s; }).bind(oipfPluginObject);
+                    
+                    console.log("BROADBAND HTML5 VIDEO DONE");
                 }
 
                 // if video is broadcast or broadband one ... do the in-common video player injection ...
@@ -563,7 +566,7 @@ if (pageActivated) {
                         videoTag.setAttribute('style', 'top:inherit; left:inherit; width:inherit; height:inherit;');
                         if(isBroadcastVideo(sType)){
                             videoTag.setAttribute('id', 'video-player');
-                            videoTag.src = 'http://clips.vorwaerts-gmbh.de/VfE_html5.mp4' // || localStorage.getItem('tvViewer_broadcast_url'); http://clips.vorwaerts-gmbh.de/VfE_html5.mp4
+                            videoTag.src = 'http://clips.vorwaerts-gmbh.de/VfE_html5.mp4' // || localStorage.getItem('tvViewer_broadcast_url'); 
                         }else if(isBroadbandVideo(sType)){
                             videoTag.setAttribute('id', 'video-player2');
                             videoTag.src =  'https://test-videos.co.uk/vids/jellyfish/mp4/h264/720/Jellyfish_720_10s_1MB.mp4' // || localStorage.getItem('tvViewer_broadcast_url');
