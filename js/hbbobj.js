@@ -825,12 +825,12 @@
     // switchTime: if timelineSelector is URN, this defines time in seconds when switch from originalMediaObject to newMediaObject, if null: irrelevant
     // newMediaObjec: video/broadcast object or HTML5 video element
     // minimumSwitchPerformanceRequired: zero or one performance profiles that apply to the switch, if zero: empty string, if profile: URN included
-    // return promise: does that mean, calling the promise again, or letting the promise open? like pending?
+    // return promise
     */
     function switchMediaPresentation(originalMediaObject, timelineSelector, timelineSource, switchTime, newMediaObject, minimumSwitchPerformanceRequired){
-        var called = false;
         console.log(originalMediaObject.firstChild);
         console.log(newMediaObject.firstChild);
+        /** 
         setTimeout(function(){
             console.log("First switch");
             videoplayer = originalMediaObject.firstChild;
@@ -855,164 +855,73 @@
                 newMediaObject.style.zIndex = "0";
                 videoplayer2.pause();
                 videoplayer2.muted = true;
-            }, 10000);
+            }, 4000);
 
 
 
-        }, 10000);
+        }, 10200);
+        **/
         
 
+        let callInProgress = false;
 
+        // Anticipating Step 3
+        if(callInProgress){
+            return resolve("CallInProgress");
+        }
 
-        //return new Promise((resolve, reject) =>
-        const hbbPromise = new Promise((resolve, reject) => {
-
-            /*
-            // notes/questions:
-            input for "newMediaObject" is unclear --> structure of video/broadcast and html5 same?
-            what is the tag for html5 video/elements? ('html5video')
-            is state always readyState? Or are there different states??
-            is "hidden (true/false)" actually the CSS visibility?
-            what are the actual statements of readyState (stopped, HAVE_FUTURE_DATA, presenting etc)
-            is "onseeking" the actual "seeking" attribute??
-            TODO: Read clause 10.2
-            URN = is oipf.ownerDocument.timeline.currentTime: 436653.845 an URN???
-            Step 3 unclear: check inside the Promise, if the Promise was called before? Is this possible inside a Promise?
-            Step 4 unclear: return Promise inside a Promise??
-            Step 5 unclear: async monitoring?
-            Step 7 unclear: What is switch preparation deadline? How to calculate
-            */
-            console.log(this);
-            //console.log(hbbPromise);
+        // Step 1)
+        return new Promise((resolve, reject) => {
             
+            // Step 2)
             if(!(originalMediaObject.type == 'video/broadcast' || originalMediaObject.type == 'html5video')){
-                reject('NotSupportedError');
+                return reject(new NotSupportedError('Preconditions not met'));
             }
 
-            console.log(originalMediaObject.ownerDocument.readyState);
             if(originalMediaObject.type == 'video/broadcast'){
                 if(!((originalMediaObject.ownerDocument.readyState == 'presenting') &&(originalMediaObject.type == 'html5video'))){
-                    reject('NotSupportedError');
+                    return reject(new NotSupportedError('Preconditions not met'));
                 }
             }
 
             if(originalMediaObject.type == 'html5video'){
                 if(!(((newMediaObject == 'video/broadcast') || (newMediaObject == 'html5video')) && ((originalMediaObject.ownerDocument.readyState == 'HAVE_FUTURE_DATA') || (originalMediaObject.ownerDocument.readyState == 'HAVE_FUTURE_DATA'))) ){
-                    reject('NotSupportedError');
+                    return reject(new NotSupportedError('Preconditions not met'));
                 }
             }
 
             if(newMediaObject.type == 'video/broadcast'){
                 if(!(newMediaObject.ownerDocument.visibility == 'true' && ((newMediaObject.ownerDocument.readyState == 'stopped') ||(newMediaObject.ownerDocument.readyState == 'presenting')))){
-                    reject('NotSupportedError');
+                    return reject(new NotSupportedError('Preconditions not met'));
                 }
             }
 
             if(newMediaObject.type == 'html5video'){
                 if(!(newMediaObject.ownerDocument.readyState == 'HAVE_ENOUGH_DATA')){
-                    reject('NotSupportedError');
+                    return reject(new NotSupportedError('Preconditions not met'));
                 }
             }
 
             if(newMediaObject.type == 'html5video'){
                 if(!(newMediaObject.ownerDocument.onseeking == 'false')){
-                    reject('NotSupportedError');
+                    return reject(new NotSupportedError('Preconditions not met'));
                 }
             }
 
             if(timelineSource == 'true'){
                 // Definition 10.2.3 timelines
                 // ETSI TS 103 286-2 [i.5] as referenced from ETSI TS 102 796 [1].
-                if(!((timelineSelector == 'null') || (originalMediaObject.type == 'video/broadcast'))){
-                    reject('NotSupportedError');
+                if(!((timelineSelector == 'null') || (isTimelineSupported(originalMediaObject, timelineSelector)))){
+                    return reject(new NotSupportedError('Timeline is not supported'));
                 }
-
-                if((originalMediaObject.type == 'video/broadcast')){
-                    // timelineSelector has to be supported for following formats
-
-                    // PTS : "urn:dvb:css:timeline:pts"
-                    if(timelineSelector == 'TODO: PTS FORMAT'){
-                        
-
-                    // TEMI : "urn:dvb:css:timeline:temi:<component_tag>:<timeline_id>"
-                    }else if(timelineSelector == 'TODO: TEMI FORMAT'){
-
-                    }else{
-
-                        reject('NotSupportedError');
-                    }
-                }else if((originalMediaObject.type == 'html5video') &&('non-adaptive HTTP streaming')){
-                    // When an ISOBMFF file delivered by non-adaptive HTTP streaming is presented by an HTML5 video element, 
-                    // ISOBMFF composition time ("urn:dvb:css:timeline:ct") shall be supported.
-                    // ISOBMFF : "urn:dvb:css:timeline:ct"
-                    if(!(timelineSelector == 'TODO: ISOBMFF FORMAT')){
-                        reject('NotSupportedError');
-
-                    }
-                }else if((originalMediaObject.type == 'html5video') &&('streaming content delievered by DASH')){
-
-                    // "urn:dvb:css:timeline:mpd:period:rel:<ticks-per-second>" 
-                    if(timelineSelector == 'TODO periood relative Timeline'){
-
-                    // "urn:dvb:css:timeline:mpd:period:rel:<ticks-per-second>:<period-id>"
-                    }else if(timelineSelector == 'TODO periood relative Timeline'){
-                        
-                    }else{
-                        reject('NotSupportedError');
-
-                    }
-                }else{
-                    reject('NotSupportedError');
-                }
-
-                // UNCLEAR:
-                // When content delivered via broadband and MSE is presented by an HTML5 video element, the media timeline
-                // of the media resource of an HTML media element shall be supported as defined in clause 4.8.12.6 of the
-                // HTML specification [3] and clause 13.1.2 of the present document. 
-
-                
             }
 
             if(timelineSource == 'false'){
                 // Definition 10.2.3 timelines
                 // ETSI TS 103 286-2 [i.5] as referenced from ETSI TS 102 796 [1].
 
-                if((newMediaObject.type == 'video/broadcast')){
-                    // timelineSelector has to be supported for following formats
-
-                    // PTS : "urn:dvb:css:timeline:pts"
-                    if(timelineSelector == 'TODO: PTS FORMAT'){
-                        
-
-                    // TEMI : "urn:dvb:css:timeline:temi:<component_tag>:<timeline_id>"
-                    }else if(timelineSelector == 'TODO: TEMI FORMAT'){
-
-                    }else{
-
-                        reject('NotSupportedError');
-                    }
-                }else if((newMediaObject.type == 'html5video') &&('non-adaptive HTTP streaming')){
-                    // When an ISOBMFF file delivered by non-adaptive HTTP streaming is presented by an HTML5 video element, 
-                    // ISOBMFF composition time ("urn:dvb:css:timeline:ct") shall be supported.
-                    // ISOBMFF : "urn:dvb:css:timeline:ct"
-                    if(!(timelineSelector == 'TODO: ISOBMFF FORMAT')){
-                        reject('NotSupportedError');
-
-                    }
-                }else if((newMediaObject.type == 'html5video') &&('streaming content delievered by DASH')){
-
-                    // "urn:dvb:css:timeline:mpd:period:rel:<ticks-per-second>" 
-                    if(timelineSelector == 'TODO periood relative Timeline'){
-
-                    // "urn:dvb:css:timeline:mpd:period:rel:<ticks-per-second>:<period-id>"
-                    }else if(timelineSelector == 'TODO periood relative Timeline'){
-                        
-                    }else{
-                        reject('NotSupportedError');
-
-                    }
-                }else{
-                    reject('NotSupportedError');
+                if(!(isTimelineSupported(newMediaObject, timelineSelector))){
+                    return reject(new NotSupportedError('Timeline is not supported'));
                 }
 
                 // UNCLEAR:
@@ -1022,21 +931,22 @@
 
             }
 
-            if(timelineSource == 'null'){
+            if(timelineSelector == 'null'){
                 if(!(originalMediaObject.type == 'html5video')){
-                    reject('NotSupportedError');
+                    return reject(new NotSupportedError('Timeline is not supported'));
                 }
             }
 
+            //(originalMediaObject.parentNode !== newMediaObject.parentNode)
             if(!(originalMediaObject.parentElement == newMediaObject.parentElement)){
-                reject('NotSupportedError');
+                return reject(new NotSupportedError('Preconditions not met'));
             }
             
             /*
             // check/debug if zIndex correct path is indeed .style.zIndex
             */
             if(!((originalMediaObject.style.zIndex > newMediaObject.style.zIndex) || ((originalMediaObject.style.zIndex < newMediaObject.style.zIndex)&&(newMediaObject.ownerDocument.visibility == 'hidden')))){
-                reject('NotSupportedError');
+                return reject(new NotSupportedError('Preconditions not met'));
             }
 
             // Definition 10.3.1
@@ -1054,11 +964,11 @@
                     // UNCLEAR: TEMI or PTS supported timeline check
                     if('TEMI OR PTS broadcast timeline supported'){
                         if(!(minimumSwitchPerformanceRequired.broadcastTimelineMonitoring == 'true')){
-                            reject('NotSupportedError');
+                            return reject(new NotSupportedError('Preconditions not met'));
                         }
                     }else{
                         if(!minimumSwitchPerformanceRequired.broadcastTimelineMonitoring == 'false'){
-                            reject('NotSupportedError');
+                            return reject(new NotSupportedError('Preconditions not met'));
                         }
                     }
 
@@ -1066,37 +976,29 @@
                     // if the terminal is able to maintain state relating to broadcast video and audio after the end of a switch from broadcast to broadband
                     if('TODO: Definition 10.4 / Clause 4.2.6'){
                         if(!(minimumSwitchPerformanceRequired.GOPIndependentSwitchToBroadcast == 'true')){
-                            reject('NotSupportedError');
+                            return reject(new NotSupportedError('Preconditions not met'));
 
                         }
                     }else{
                         if(!(minimumSwitchPerformanceRequired.GOPIndependentSwitchToBroadcast == 'false')){
-                            reject('NotSupportedError');
+                            return reject(new NotSupportedError('Preconditions not met'));
 
                         }
                     }
 
                 }else {
-                    reject('NotSupportedError');
+                    return reject(new NotSupportedError('Preconditions not met'));
                 }
             }
-            // 3) 
-            // UNSURE about the correct logic here - var called
-            // if function was called already - resolve with InProgress
-            // How can we make a global var for dynamic promise function like this?
-            // Access previous call of the function? Is this possible?
-            // Doesnt this terminate every other step behind ???
-            if(!called){
-                called = true;
-                resolve('CallInProgress');
-            }
+            // Step 3) 
+            callInProgress = true;
 
-            // 4)
+            // Step 4)
             if(timelineSelector == null){
-                return;
+                return Promise.reject(new NotSupportedError('Preconditions not met'));
             }
 
-            // 5)
+            // Step 5)
             // Find indicator inside timelineSource for originalMediaObject or newMediaObject
             // UNCLEAR: How to async monitoring the timeline, what object is the timeline? 
             if(timelineSource.source == 'originalMediaObject'){
@@ -1116,90 +1018,260 @@
             }
 
 
-            // 6)
+            // Step 6)
             // CHECK algorithm from 4.2.1 clause to check switchTime for the TODO
-            if(timelineSelector != null && switchTime == 'TODO'){
-                resolve('InThePast');
+            var now = new Date();
+            if (timelineSelector != null && ((switchTime <= now) || (switchTime >= now.getTime()+10*60000))) {
+              return resolve("InThePast");
             }
 
-            // 7) Switch preparation deadline
+            // Step 7) Switch preparation deadline 
             // Definition 10.2.4
             // switchPreparationDeadline in seconds
             let switchPreparationDeadline = 2;
             // CHECK how to receive TEMI data --> then add 2,5s
-            if(timelineSelector == 'TEMI timeline'){
-                switchPreparationDeadline =+ 2,5;
-            }
+
+            // Definition 8.1.4.2
+            timelineTime();
             
             // CHECK/DEBUG TIME CALCULATION
             if(Date.now() > (timelineSelector + switchPreparationDeadline)){
-                resolve('SwitchPreparationDeadlinePassed');
+                return resolve('SwitchPreparationDeadlinePassed');
             }
 
-            // 8)
+            //Step 5 of 8.1.4.2
+            setTimeout(function() {
+                // Invoke the algorithm for allocating suitable decoders for newMediaObject
+                // Step 8) of 8.1.4.1 Allocate suitable Video and start of Definition 8.1.4.4
+                executingSwitch(originalMediaObject, newMediaObject,timelineSelector, switchTime, timelineTime, minimumSwitchPerformanceRequired)
+                //allocateVideoAudioDecoders(newMediaObject);
+              }, switchPreparationDeadline - ALLOCATION_TIME);
+
+            
             // call algorithm for attempting to allocate suitable video and audio decoders for newMediaObject
             // ADD ALGORITHM video/audio decoder for newMediaObject
-            // Definition 8.1.4.4 !!!
-            async function videoAudioDecoderNewMediaObject(newMediaObject){
-                //check if visible through newMediaObject attributes
-                // 1)
-                if(newMediaObject == 'already suitable decoder'){
-                    return; //stop
-                }
-
-                // 2)    
-                // UNCLEAR: If the terminal has more than one suitable video or audio decoder available to HbbTV® but not allocated, it is implementation specific which are allocated. 
-                if(newMediaObject.extraSDVideoDecodes == '' && newMediaObject.extraHDVideoDecodes == ''){
+            
+            
+           
 
 
-                }
+            // Step 9)
+            resolve();
 
-                 // 3)
-                 // UNCLEAR: 
-                if('suitable video/audio decoder allocated for HTML5 video' == 'paused'){
-                    'suitable video/audio decoder allocated for HTML5 video allocate to newMediaObject';
-                    return; //stop
-                }
-
-
-                 // 4)
-                if(newMediaObject.type == 'video/broadcast'){
-                    // UNCLEAR: does 3) mean, if newMediaObject and originalMediaObject are NOT in presenting state and both NOT css visibility to hidden?
-                    if((newMediaObject.readyState == 'presenting') && (newMediaObject.visibility == 'hidden') && ('READ UNCLEAR ABOVE')){
-                        return; //stop
-                    }
-                }
-
-
-                 // 5)
-                if('suitable video/audio decoder allocated for originalMediaObject'){
-                    return; //stop
-                }
-
-                 // 6)
-                resolve('NoSuitableMediaDecoderAvaiable');
-            }
-
-            videoAudioDecoderNewMediaObject(newMediaObject);
-
-
-            // 9)
-            return;
-
-        })
-
-
-        console.log(hbbPromise);
-        hbbPromise.then((msg) => {
-            console.log('Promise Resolved: '+ msg) 
-        }).catch((error) =>{
-            console.log('Promise Rejected: '+ error)
-        })
+        });
 
         
 
 
     }
+
+    //NOTE 2: Clause 10.2 definition which timelines are required to be supported under what circumstances
+    function isTimelineSupported(MediaObject, timelineSelector){
+        if((MediaObject.type == 'video/broadcast')){
+                    // timelineSelector has to be supported for following formats
+
+                    // PTS : "urn:dvb:css:timeline:pts"
+            if(timelineSelector == 'TODO: PTS FORMAT'){
+                return true;
+
+                    // TEMI : "urn:dvb:css:timeline:temi:<component_tag>:<timeline_id>"
+            }else if(timelineSelector == 'TODO: TEMI FORMAT'){
+
+                return true;
+
+            }else{
+                return false;
+            }
+        }else if((MediaObject.type == 'html5video') &&('non-adaptive HTTP streaming')){
+            // When an ISOBMFF file delivered by non-adaptive HTTP streaming is presented by an HTML5 video element, 
+            // ISOBMFF composition time ("urn:dvb:css:timeline:ct") shall be supported.
+            // ISOBMFF : "urn:dvb:css:timeline:ct"
+            if((timelineSelector == 'TODO: ISOBMFF FORMAT')){
+                return true;
+
+                }
+        }else if((MediaObject.type == 'html5video') &&('streaming content delievered by DASH')){
+                    // "urn:dvb:css:timeline:mpd:period:rel:<ticks-per-second>" 
+            if(timelineSelector == 'TODO periood relative Timeline'){
+                return true;
+            // "urn:dvb:css:timeline:mpd:period:rel:<ticks-per-second>:<period-id>"
+            }else if(timelineSelector == 'TODO periood relative Timeline'){
+                return true;
+            }else{
+                return false;
+
+            }
+        }else{
+            return false;
+        }
+    }
+
+    // Step 8 of 8.1.4.1 and complete 8.1.4.3 - allocateSuitableVideo - executing the switch
+    async function allocateVideoAudioDecoders(originalMediaObject, newMediaObject, timelineSelector, switchTime){
+        //check if visible through newMediaObject attributes
+        // 1)
+        if(newMediaObject == 'already suitable decoder'){
+            return; //stop
+        }
+
+        // 2)    
+        // UNCLEAR: If the terminal has more than one suitable video or audio decoder available to HbbTV® but not allocated, it is implementation specific which are allocated. 
+        if(newMediaObject.extraSDVideoDecodes == '' && newMediaObject.extraHDVideoDecodes == ''){
+
+
+        }
+
+         // 3)
+         // UNCLEAR: 
+        if('suitable video/audio decoder allocated for HTML5 video' == 'paused'){
+            'suitable video/audio decoder allocated for HTML5 video allocate to newMediaObject';
+            return; //stop
+        }
+
+
+         // 4)
+        if(newMediaObject.type == 'video/broadcast'){
+            // UNCLEAR: does 3) mean, if newMediaObject and originalMediaObject are NOT in presenting state and both NOT css visibility to hidden?
+            if((newMediaObject.readyState == 'presenting') && (newMediaObject.visibility == 'hidden') && ('READ UNCLEAR ABOVE')){
+                return; //stop
+            }
+        }
+
+
+         // 5)
+        if('suitable video/audio decoder allocated for originalMediaObject'){
+            return; //stop
+        }
+
+         // 6)
+        resolve('NoSuitableMediaDecoderAvaiable');
+    }
+
+    function isMonitoringTimeline(timeline){
+        return false;
+    }
+
+    // 8.1.4.2 Between a call to switchMediaPresentation and the start of the switch
+    function timelineTime(switchTime, timeline, switchPreparationDeadline){
+        if(timelineSelector == 'TEMI timeline'){
+            if(!monitoringTimeline(timelineSource)){
+                //current timeline time not known
+                return reject(new NotSupportedError('Timeline time not known'));
+            }
+            switchPreparationDeadline =+ 2,5;
+        }else{
+            //current timeline time not known
+            return reject(new NotSupportedError('Timeline time not known'));
+        }
+
+        if(switchTime < timeline){
+            throw new InvalidStateError('Switch time is in the past');
+
+        }
+        if(currentTime > switchPreparationDeadline){
+            throw new InvalidStateError('Switch preparation deadline passed');
+
+        }
+        if( timeline){
+            //TODO check discontinuity for PTS
+            throw new InvalidStateError('Timeline has a discontinuity');
+
+        }
+
+        if(!timeline.isAvailable()){
+            throw new NotSupportedError('Monitored timeline is unavailable');
+        }
+
+    }
+
+    // 8.1.4.2
+    function checkSwitch(originalMediaObject, promise){
+        promise
+        .then(error => {
+            if((originalMediaObject.type == "video/broadcast") && originalMediaObject.onChannelChangeSucceeded == true ){
+                return Promise.resolve("ChannelChanged");
+            }
+            if((originalMediaObject.type == "html5video") && srcIsChanged == true ){
+                return Promise.resolve("SourceChanged");
+            }
+
+            if(newMediaObject.type == "html5video"){
+                if(newMediaObject.state == "changed"){
+                    return Promise.resolve("NewObjectChanged");
+                }
+            }
+
+            // 8.1.4.2 4)
+            //TODO clause 10.2.7 user make changes to terminal audio language - terminal audio language not in scope
+
+        })
+    }
+
+    // 8.1.4.3
+    function executingSwitch(originalMediaObject, newMediaObject,timelineSelector, switchTime, timelineTime, minimumSwitchPerformanceRequired){
+        if(timelineSelector == null){
+            return reject(new InvalidStateError('Timeline Selector null'));
+        }
+        if(timelineSelector != null && (timelineTime > switchTime)){
+            return reject(new InvalidStateError('Switch time is in the past'));
+        }
+        if(originalMediaObject.type == "html5video" && originalMediaObject.detectedPlayback && timelineTime > switchTime){
+            return reject(new InvalidStateError('Switch time is in the past'));
+        }
+
+        if(minimumSwitchPerformanceRequired == "URN supported but not met"){
+            return reject(new NoPerformanceProfileMet('No Performance Profile Met'));
+
+        }
+
+        //TODO STEP 3
+        if(newMediaObject == "not suitable video decoder"){
+
+        }
+
+        //STEP 4
+        if(newMediaObject.type == "video/broadcast"){
+            if(newMedoaObject.state == "stopped"){
+                newMediaObject.state = "presenting";
+            }
+        }
+
+        //STEP 5
+        if(newMediaObject.type == "html5video"){
+            if(newMedoaObject.state == "paused"){
+                newMediaObject.state = "play";
+            }
+        }
+
+        //STEP 6 WAIT ASYNC
+        // XXX
+
+        //STEP 7
+        if(newMediaObject.type == "video/broadcast" && newMediaObject.onChannelChangeError){
+            return resolve('VideoBroadcastPresentingFailed');
+
+        }
+
+        //STEP 8
+        if(newMediaObject.type == "html5video" && newMediaObject.errorEvent){
+            return resolve('MediaElementError');
+
+        }
+
+        //STEP 9
+        newMediaObject.visibility == "visible";
+        if(newMediaObject.type == "video/broadcast"){
+            newMediaObject.audio = "100";
+        }else if(newMediaObject.type == "html5video"){
+            newMediaObject.volume = "1,0";
+        }
+
+        //STEP 10 XXX CHECK WITH EXPERIMENT
+        originalMediaObject.visibility == hidden;
+        originalMediaObject.audio == 0;
+    }
+
+
 
     // just for testing / not important
     //NotSupportedError.prototype = Error.prototype;
@@ -1219,7 +1291,8 @@
     //minimumSwitchPerformanceRequired == performance profile
 
     //originalMediaObject, timelineSelector, timelineSource, switchTime, newMediaObject, minimumSwitchPerformanceRequired
-    switchMediaPresentation(document.getElementById('video'),null,null,null,document.getElementById('video2'),null);
+    result = switchMediaPresentation(document.getElementById('video'),null,null,null,document.getElementById('video2'),null);
+    checkSwitch(document.getElementById('video'),document.getElementById('video2'),result);
 
 })(
     typeof self !== 'undefined' && self ||
