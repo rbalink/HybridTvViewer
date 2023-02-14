@@ -1106,46 +1106,7 @@
         }
     }
 
-    // Step 8 of 8.1.4.1 and complete 8.1.4.3 - allocateSuitableVideo - executing the switch
-    async function allocateVideoAudioDecoders(originalMediaObject, newMediaObject, timelineSelector, switchTime){
-        //check if visible through newMediaObject attributes
-        // 1)
-        if(newMediaObject == 'already suitable decoder'){
-            return; //stop
-        }
 
-        // 2)    
-        // UNCLEAR: If the terminal has more than one suitable video or audio decoder available to HbbTV® but not allocated, it is implementation specific which are allocated. 
-        if(newMediaObject.extraSDVideoDecodes == '' && newMediaObject.extraHDVideoDecodes == ''){
-
-
-        }
-
-         // 3)
-         // UNCLEAR: 
-        if('suitable video/audio decoder allocated for HTML5 video' == 'paused'){
-            'suitable video/audio decoder allocated for HTML5 video allocate to newMediaObject';
-            return; //stop
-        }
-
-
-         // 4)
-        if(newMediaObject.type == 'video/broadcast'){
-            // UNCLEAR: does 3) mean, if newMediaObject and originalMediaObject are NOT in presenting state and both NOT css visibility to hidden?
-            if((newMediaObject.readyState == 'presenting') && (newMediaObject.visibility == 'hidden') && ('READ UNCLEAR ABOVE')){
-                return; //stop
-            }
-        }
-
-
-         // 5)
-        if('suitable video/audio decoder allocated for originalMediaObject'){
-            return; //stop
-        }
-
-         // 6)
-        resolve('NoSuitableMediaDecoderAvaiable');
-    }
 
     function isMonitoringTimeline(timeline){
         return false;
@@ -1207,7 +1168,7 @@
         })
     }
 
-    // 8.1.4.3
+    // 8.1.4.3 executing the switch
     function executingSwitch(originalMediaObject, newMediaObject,timelineSelector, switchTime, timelineTime, minimumSwitchPerformanceRequired){
         if(timelineSelector == null){
             return reject(new InvalidStateError('Timeline Selector null'));
@@ -1269,8 +1230,65 @@
         //STEP 10 XXX CHECK WITH EXPERIMENT
         originalMediaObject.visibility == hidden;
         originalMediaObject.audio == 0;
+
+
+        //STEP 11
+        if(originalMediaObject.type == "video/broadcast"){
+            if(originalMediaObject.state == "presenting"){
+                originalMediaObject.state = "presenting";
+            }
+        }
+
+        //STEP 12
+        if(originalMediaObject.type == "html5video"){
+            if(!(originalMediaObject.state == "paused")){
+                originalMediaObject.state = "paused";
+            }
+        }
+
+        return resolve("undefined");
     }
 
+    // 8.1.4.4 (and step 8 of 8.1.4.1) - allocate suitable video and audio decoders for newMediaObject
+    async function allocateVideoAudioDecoders(originalMediaObject, newMediaObject, timelineSelector, switchTime){
+        //check if visible through newMediaObject attributes
+        // 1)
+        if(newMediaObject == 'already suitable decoder'){
+            return; //stop
+        }
+
+        // 2)    
+        // UNCLEAR: If the terminal has more than one suitable video or audio decoder available to HbbTV® but not allocated, it is implementation specific which are allocated. 
+        if(newMediaObject.extraSDVideoDecodes == '' && newMediaObject.extraHDVideoDecodes == ''){
+
+
+        }
+
+         // 3)
+         // UNCLEAR: 
+        if('suitable video/audio decoder allocated for HTML5 video' == 'paused'){
+            'suitable video/audio decoder allocated for HTML5 video allocate to newMediaObject';
+            return; //stop
+        }
+
+
+         // 4)
+        if(newMediaObject.type == 'video/broadcast'){
+            // UNCLEAR: does 3) mean, if newMediaObject and originalMediaObject are NOT in presenting state and both NOT css visibility to hidden?
+            if((newMediaObject.readyState == 'presenting') && (newMediaObject.visibility == 'hidden') && ('READ UNCLEAR ABOVE')){
+                return; //stop
+            }
+        }
+
+
+         // 5)
+        if('suitable video/audio decoder allocated for originalMediaObject'){
+            return; //stop
+        }
+
+         // 6)
+        return resolve('NoSuitableMediaDecoderAvaiable');
+    }
 
 
     // just for testing / not important
@@ -1291,7 +1309,8 @@
     //minimumSwitchPerformanceRequired == performance profile
 
     //originalMediaObject, timelineSelector, timelineSource, switchTime, newMediaObject, minimumSwitchPerformanceRequired
-    result = switchMediaPresentation(document.getElementById('video'),null,null,null,document.getElementById('video2'),null);
+    //timeline in newMediaObject if timelineSource false, if true in originalMediaObject
+    result = switchMediaPresentation(document.getElementById('video'),"urn:dvb:metadata:cs:Actual:3.2.3",false,17,document.getElementById('video2'),"");
     checkSwitch(document.getElementById('video'),document.getElementById('video2'),result);
 
 })(
