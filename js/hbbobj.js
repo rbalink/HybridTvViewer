@@ -830,7 +830,6 @@
     function switchMediaPresentation(originalMediaObject, timelineSelector, timelineSource, switchTime, newMediaObject, minimumSwitchPerformanceRequired){
         console.log(originalMediaObject.firstChild);
         console.log(newMediaObject.firstChild);
-        /** 
         setTimeout(function(){
             console.log("First switch");
             videoplayer = originalMediaObject.firstChild;
@@ -860,7 +859,6 @@
 
 
         }, 10200);
-        **/
         
 
         let callInProgress = false;
@@ -1020,7 +1018,7 @@
             timelineTime();
             
             // CHECK/DEBUG TIME CALCULATION
-            if(Date.now() > (timelineSelector + switchPreparationDeadline)){
+            if(Date.now() > (switchTime + switchPreparationDeadline)){
                 return resolve('SwitchPreparationDeadlinePassed');
             }
 
@@ -1032,16 +1030,8 @@
                 //allocateVideoAudioDecoders(newMediaObject);
               }, switchPreparationDeadline - ALLOCATION_TIME);
 
-            
-            // call algorithm for attempting to allocate suitable video and audio decoders for newMediaObject
-            // ADD ALGORITHM video/audio decoder for newMediaObject
-            
-            
-           
-
-
             // Step 9)
-            resolve();
+            return resolve();
 
         });
 
