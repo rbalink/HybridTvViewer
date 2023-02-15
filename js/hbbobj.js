@@ -874,36 +874,37 @@
         return new Promise((resolve, reject) => {
             
             // Step 2)
-            if(!(originalMediaObject.type == 'video/broadcast' || originalMediaObject.type == 'html5video')){
+            if(!(originalMediaObject.type == 'video/broadcast' || isMimeTypeHTML5Video(originalMediaObject.type))){
                 return reject(new NotSupportedError('Preconditions not met'));
             }
 
+            console.log(originalMediaObject);
             if(originalMediaObject.type == 'video/broadcast'){
-                if(!((originalMediaObject.ownerDocument.readyState == 'presenting') &&(originalMediaObject.type == 'html5video'))){
+                if(!((originalMediaObject.firstChild.getAttribute("readyState") == 'presenting') &&((isMimeTypeHTML5Video(newMediaObject.type))))){
                     return reject(new NotSupportedError('Preconditions not met'));
                 }
             }
 
-            if(originalMediaObject.type == 'html5video'){
-                if(!(((newMediaObject == 'video/broadcast') || (newMediaObject == 'html5video')) && ((originalMediaObject.ownerDocument.readyState == 'HAVE_FUTURE_DATA') || (originalMediaObject.ownerDocument.readyState == 'HAVE_FUTURE_DATA'))) ){
+            if((isMimeTypeHTML5Video(originalMediaObject.type))){
+                if(!(((newMediaObject == 'video/broadcast') || ((isMimeTypeHTML5Video(newMediaObject.type)))) && ((originalMediaObject.firstChild.getAttribute("readyState") == 'HAVE_FUTURE_DATA') || (originalMediaObject.firstChild.getAttribute("readyState") == 'HAVE_FUTURE_DATA'))) ){
                     return reject(new NotSupportedError('Preconditions not met'));
                 }
             }
 
             if(newMediaObject.type == 'video/broadcast'){
-                if(!(newMediaObject.ownerDocument.visibility == 'true' && ((newMediaObject.ownerDocument.readyState == 'stopped') ||(newMediaObject.ownerDocument.readyState == 'presenting')))){
+                if(!(newMediaObject.firstChild.getAttribute("visibility") == 'true' && ((newMediaObject.firstChild.getAttribute("readyState") == 'stopped') ||(newMediaObject.firstChild.getAttribute("readyState") == 'presenting')))){
                     return reject(new NotSupportedError('Preconditions not met'));
                 }
             }
 
-            if(newMediaObject.type == 'html5video'){
-                if(!(newMediaObject.ownerDocument.readyState == 'HAVE_ENOUGH_DATA')){
+            if((isMimeTypeHTML5Video(newMediaObject.type))){
+                if(!(newMediaObject.firstChild.getAttribute("readyState") == 'HAVE_ENOUGH_DATA')){
                     return reject(new NotSupportedError('Preconditions not met'));
                 }
             }
 
-            if(newMediaObject.type == 'html5video'){
-                if(!(newMediaObject.ownerDocument.onseeking == 'false')){
+            if((isMimeTypeHTML5Video(newMediaObject.type))){
+                if(!(newMediaObject.firstChild.getAttribute("onSeeking") == 'false')){
                     return reject(new NotSupportedError('Preconditions not met'));
                 }
             }
@@ -932,12 +933,11 @@
             }
 
             if(timelineSelector == 'null'){
-                if(!(originalMediaObject.type == 'html5video')){
+                if(!((isMimeTypeHTML5Video(originalMediaObject.type)))){
                     return reject(new NotSupportedError('Timeline is not supported'));
                 }
             }
 
-            //(originalMediaObject.parentNode !== newMediaObject.parentNode)
             if(!(originalMediaObject.parentElement == newMediaObject.parentElement)){
                 return reject(new NotSupportedError('Preconditions not met'));
             }
@@ -953,6 +953,7 @@
             if(minimumSwitchPerformanceRequired == ''){
 
             }else{
+                //TODO !!!
                 // profile elements shall be present as child of the ta element
 
                 // UNCLEAR and TODO / ADD in if clause:
@@ -999,23 +1000,7 @@
             }
 
             // Step 5)
-            // Find indicator inside timelineSource for originalMediaObject or newMediaObject
-            // UNCLEAR: How to async monitoring the timeline, what object is the timeline? 
-            if(timelineSource.source == 'originalMediaObject'){
-                //async monitoring the timeline of originalMediaObject
-            }else{
-                //async monitoring the timeline of newMediaObject
-            }
-
-            if(timelineSource == 'true' && ' != TEMI '){
-                // UNCLEAR: what does that mean?
-                // except for TEMI, the terminal will be monitoring the timeline as part of decoding the media concerned
-            }else if('TEMI'){
-                //if called before 
-                if(MediaSynchroniser.initMediaSynchroniser == 'active'){
-                    //async the MediaSynchroniser.initMediaSynchroniser
-                }
-            }
+            startMonitoringTimeline(timelineSelector,originalMediaObject,newMediaObject,timelineSource);
 
 
             // Step 6)
@@ -1068,43 +1053,65 @@
     //NOTE 2: Clause 10.2 definition which timelines are required to be supported under what circumstances
     function isTimelineSupported(MediaObject, timelineSelector){
         if((MediaObject.type == 'video/broadcast')){
-                    // timelineSelector has to be supported for following formats
-
-                    // PTS : "urn:dvb:css:timeline:pts"
-            if(timelineSelector == 'TODO: PTS FORMAT'){
+            if(timelineSelector.startsWith("urn:dvb:css:timeline:pts:")){
                 return true;
-
-                    // TEMI : "urn:dvb:css:timeline:temi:<component_tag>:<timeline_id>"
-            }else if(timelineSelector == 'TODO: TEMI FORMAT'){
-
+            // TEMI : "urn:dvb:css:timeline:temi:<component_tag>:<timeline_id>"
+            }else if(timelineSelector.startsWith("urn:dvb:css:timeline:temi:")){
                 return true;
-
             }else{
                 return false;
             }
-        }else if((MediaObject.type == 'html5video') &&('non-adaptive HTTP streaming')){
-            // When an ISOBMFF file delivered by non-adaptive HTTP streaming is presented by an HTML5 video element, 
-            // ISOBMFF composition time ("urn:dvb:css:timeline:ct") shall be supported.
+        }else if(((isMimeTypeHTML5Video(MediaObject.type))) &&('non-adaptive HTTP streaming')){
             // ISOBMFF : "urn:dvb:css:timeline:ct"
-            if((timelineSelector == 'TODO: ISOBMFF FORMAT')){
+            if((timelineSelector.startsWith("urn:dvb:css:timeline:ct"))){
                 return true;
 
                 }
-        }else if((MediaObject.type == 'html5video') &&('streaming content delievered by DASH')){
-                    // "urn:dvb:css:timeline:mpd:period:rel:<ticks-per-second>" 
-            if(timelineSelector == 'TODO periood relative Timeline'){
+        }else if(((isMimeTypeHTML5Video(MediaObject.type))) &&('streaming content delievered by DASH')){
+            // "urn:dvb:css:timeline:mpd:period:rel:<ticks-per-second>" 
+            if(timelineSelector.startsWith("urn:dvb:css:timeline:mpd:period:rel:")){
                 return true;
             // "urn:dvb:css:timeline:mpd:period:rel:<ticks-per-second>:<period-id>"
-            }else if(timelineSelector == 'TODO periood relative Timeline'){
+            }else if(timelineSelector.startsWith("urn:dvb:css:timeline:mpd:period:rel:")){
                 return true;
             }else{
                 return false;
-
             }
         }else{
             return false;
         }
     }
+
+    function startMonitoringTimeline(timelineSelector, originalMediaObject, newMediaObject, timelineSource) {
+        // If timelineSource is true, the terminal will be monitoring the timeline as part of decoding the media, so we don't need to start monitoring it here.
+        if (timelineSource === true) {
+          return;
+        }
+      
+        // If timelineSource is false and timelineSelector is null, there is no timeline to monitor, so we don't need to start monitoring it here.
+        if (timelineSource === false && timelineSelector === null) {
+          return;
+        }
+      
+        // If timelineSource is false and timelineSelector is not null, we need to start asynchronously monitoring the timeline indicated by timelineSelector.
+        if (timelineSource === false && timelineSelector !== null) {
+          let mediaObject = originalMediaObject;
+      
+          // If originalMediaObject is an HTML5 video element and newMediaObject is an HTML5 video element, use newMediaObject instead of originalMediaObject.
+          if (isMimeTypeHTML5Video(originalMediaObject) && isMimeTypeHTML5Video(newMediaObject)) {
+            mediaObject = newMediaObject;
+          }
+      
+          // If the application has previously called MediaSynchroniser.initMediaSynchroniser with timelineSelector, it will be monitoring that timeline, so we don't need to start monitoring it here.
+          if (MediaSynchroniser.getMonitoredTimeline(timelineSelector) !== null) {
+            return;
+          }
+      
+          // Start asynchronously monitoring the timeline indicated by timelineSelector.
+          MediaSynchroniser.initMediaSynchroniser(mediaObject, timelineSelector);
+        }
+      }
+      
 
 
 
@@ -1148,15 +1155,15 @@
     // 8.1.4.2
     function checkSwitch(originalMediaObject, promise){
         promise
-        .then(error => {
+        .then(function(error) {
             if((originalMediaObject.type == "video/broadcast") && originalMediaObject.onChannelChangeSucceeded == true ){
                 return Promise.resolve("ChannelChanged");
             }
-            if((originalMediaObject.type == "html5video") && srcIsChanged == true ){
+            if(((isMimeTypeHTML5Video(originalMediaObject.type))) && srcIsChanged == true ){
                 return Promise.resolve("SourceChanged");
             }
 
-            if(newMediaObject.type == "html5video"){
+            if((isMimeTypeHTML5Video(newMediaObject.type))){
                 if(newMediaObject.state == "changed"){
                     return Promise.resolve("NewObjectChanged");
                 }
@@ -1223,7 +1230,7 @@
         newMediaObject.visibility == "visible";
         if(newMediaObject.type == "video/broadcast"){
             newMediaObject.audio = "100";
-        }else if(newMediaObject.type == "html5video"){
+        }else if((isMimeTypeHTML5Video(newMediaObject.type))){
             newMediaObject.volume = "1,0";
         }
 
@@ -1240,7 +1247,7 @@
         }
 
         //STEP 12
-        if(originalMediaObject.type == "html5video"){
+        if((isMimeTypeHTML5Video(originalMediaObject.type))){
             if(!(originalMediaObject.state == "paused")){
                 originalMediaObject.state = "paused";
             }
@@ -1290,6 +1297,16 @@
         return resolve('NoSuitableMediaDecoderAvaiable');
     }
 
+    //returns true if MIME type is html5 video
+    function isMimeTypeHTML5Video(type){
+        if((type == 'video/mp4') || (type=='video/webm') || (type=='video/ogg')){
+            return true;
+        }else{
+            return false;
+        }
+
+    }
+
 
     // just for testing / not important
     //NotSupportedError.prototype = Error.prototype;
@@ -1310,7 +1327,7 @@
 
     //originalMediaObject, timelineSelector, timelineSource, switchTime, newMediaObject, minimumSwitchPerformanceRequired
     //timeline in newMediaObject if timelineSource false, if true in originalMediaObject
-    result = switchMediaPresentation(document.getElementById('video'),"urn:dvb:metadata:cs:Actual:3.2.3",false,17,document.getElementById('video2'),"");
+    result = switchMediaPresentation(document.getElementById('video'),"urn:dvb:css:timeline:pts:1800,3600",true,17,document.getElementById('video2'),"");
     checkSwitch(document.getElementById('video'),document.getElementById('video2'),result);
 
 })(

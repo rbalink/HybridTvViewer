@@ -388,7 +388,7 @@
     // manipulate original video element to make it a broadband video element by manipulating the mime type
     original = document.getElementsByTagName('object')[2];
     clone = original.cloneNode(true);
-    clone.type = "video/mpeg";
+    clone.type = "video/mp4";
     clone.id = "video2";
     //clone.hidden = "true";
     clone.style.zIndex = "0";
