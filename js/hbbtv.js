@@ -388,15 +388,21 @@
     // manipulate original video element to make it a broadband video element by manipulating the mime type
     original = document.getElementsByTagName('object')[2];
     clone = original.cloneNode(true);
+    clone.contentDocument;
     clone.type = "video/mp4";
     clone.id = "video2";
     //clone.hidden = "true";
-    clone.style.zIndex = "0";
+    clone.style.zIndex = "4";
     original.style.zIndex = "5";
     console.log(document.getElementById('videocontainer'));
     console.log(document.getElementsByTagName('object'));
     document.getElementById('videocontainer').append(clone);
     console.log(document.getElementsByTagName('object'));
+    console.log(document.getElementById('video2'));
+    test = document.getElementById('video2');
+    doc = test.contentDocument;
+    doc.documentElement.remove();
+    
 
     teee = document.getElementsByTagName('div');
     //console.log(document.getElementsByTagName('div'));

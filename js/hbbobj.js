@@ -830,6 +830,7 @@
     function switchMediaPresentation(originalMediaObject, timelineSelector, timelineSource, switchTime, newMediaObject, minimumSwitchPerformanceRequired){
         console.log(originalMediaObject.firstChild);
         console.log(newMediaObject.firstChild);
+        /*
         setTimeout(function(){
             console.log("First switch");
             videoplayer = originalMediaObject.firstChild;
@@ -859,14 +860,18 @@
 
 
         }, 10200);
-        
+        */
 
         let callInProgress = false;
-
+        let isMonitoring = false;
         // Anticipating Step 3
         if(callInProgress){
             return resolve("CallInProgress");
         }
+
+        // Anticipating Step 5 - calculating switchTime with actual time
+        var initNow = new Date();
+        initNow.setSeconds(initNow.getSeconds() + switchTime);
 
         // Step 1)
         return new Promise((resolve, reject) => {
@@ -1002,9 +1007,11 @@
 
 
             // Step 6)
-            // CHECK algorithm from 4.2.1 clause to check switchTime for the TODO
+            // 4.2.1 clause - calculated time by timestamp at call and now with switchTime
             var now = new Date();
-            if (timelineSelector != null && ((switchTime <= now) || (switchTime >= now.getTime()+10*60000))) {
+            console.log(initNow);
+            console.log(now);
+            if (timelineSelector != null && ((initNow <= now) || (switchTime >= now.getTime()+10*60000))) {
               return resolve("InThePast");
             }
 
@@ -1012,15 +1019,18 @@
             // Definition 10.2.4
             // switchPreparationDeadline in seconds
             let switchPreparationDeadline = 2;
-            // CHECK how to receive TEMI data --> then add 2,5s
 
-            // Definition 8.1.4.2
-            timelineTime();
+            // Definition 8.1.4.2 
+            timelineTime(switchTime, timelineSelector, switchPreparationDeadline, isMonitoring);
             
-            // CHECK/DEBUG TIME CALCULATION
-            if(Date.now() > (switchTime + switchPreparationDeadline)){
+            
+            prepTimeSwitchTimeDate = new Date();
+            prepTimeSwitchTimeDate.setSeconds(switchPrepDate.getSeconds() + switchPreparationDeadline);
+            if(Date.now() > (prepTimeSwitchTimeDate)){
                 return resolve('SwitchPreparationDeadlinePassed');
             }
+            console.log(initNow - Date.now());
+            waitingTime = initNow - Date.now();
 
             //Step 5 of 8.1.4.2
             setTimeout(function() {
@@ -1028,7 +1038,7 @@
                 // Step 8) of 8.1.4.1 Allocate suitable Video and start of Definition 8.1.4.4
                 executingSwitch(originalMediaObject, newMediaObject,timelineSelector, switchTime, timelineTime, minimumSwitchPerformanceRequired)
                 //allocateVideoAudioDecoders(newMediaObject);
-              }, switchPreparationDeadline - ALLOCATION_TIME);
+              }, waitingTime);
 
             // Step 9)
             return resolve();
@@ -1073,6 +1083,7 @@
     }
 
     function startMonitoringTimeline(timelineSelector, originalMediaObject, newMediaObject, timelineSource) {
+        isMonitoring = true;
         // If timelineSource is true, the terminal will be monitoring the timeline as part of decoding the media, so we don't need to start monitoring it here.
         if (timelineSource === true) {
           return;
@@ -1103,43 +1114,38 @@
       }
       
 
-
-
-    function isMonitoringTimeline(timeline){
-        return false;
-    }
-
     // 8.1.4.2 Between a call to switchMediaPresentation and the start of the switch
-    function timelineTime(switchTime, timeline, switchPreparationDeadline){
-        if(timelineSelector == 'TEMI timeline'){
-            if(!monitoringTimeline(timelineSource)){
+    function timelineTime(switchTime, timeline, switchPreparationDeadline, isMonitoring){
+        if(timeline.startsWith("urn:dvb:css:timeline:temi:")){
+            if(!isMonitoring && timeline == null){
                 //current timeline time not known
                 return reject(new NotSupportedError('Timeline time not known'));
             }
             switchPreparationDeadline =+ 2,5;
         }else{
-            //current timeline time not known
-            return reject(new NotSupportedError('Timeline time not known'));
+            if(timeline == null){
+                return reject(new NotSupportedError('Timeline time not known'));
+            }
         }
 
-        if(switchTime < timeline){
+        var switchTimeDate = new Date();
+        switchTimeDate.setSeconds(switchTimeDate.getSeconds() + switchTime);
+        if(switchTimeDate < Date.now()){
             throw new InvalidStateError('Switch time is in the past');
 
         }
-        if(currentTime > switchPreparationDeadline){
+
+        // calculate switchPrepDateTime
+        switchPrepDate = new Date();
+        switchPrepDate.setSeconds(switchPrepDate.getSeconds() + switchPreparationDeadline);
+        if(new Date() > switchPrepDate){
             throw new InvalidStateError('Switch preparation deadline passed');
 
         }
-        if( timeline){
-            //TODO check discontinuity for PTS
-            throw new InvalidStateError('Timeline has a discontinuity');
+        if(switchTimeDate >= new Date().getTime()+10*60000){
+            throw new InvalidStateError('Switch Time is more than 10 minutes in the future');
 
         }
-
-        if(!timeline.isAvailable()){
-            throw new NotSupportedError('Monitored timeline is unavailable');
-        }
-
     }
 
     // 8.1.4.2
@@ -1177,32 +1183,57 @@
             return reject(new InvalidStateError('Switch time is in the past'));
         }
 
-        if(minimumSwitchPerformanceRequired == "URN supported but not met"){
-            return reject(new NoPerformanceProfileMet('No Performance Profile Met'));
+        /**
+         * Unclear how this translate into code: "Performance Profile"
+         * 
+         * If minimumSwitchPerformanceRequired is a URN that identifies a performance profile supported by the
+            terminal and it is known to the terminal that the requirements of that performance profile will not be met then
+            resolve promise with "NoPerformanceProfileMet"
+        */
+        // if(minimumSwitchPerformanceRequired == "URN supported but not met"){
+        //    return reject(new NoPerformanceProfileMet('No Performance Profile Met'));
+        //}
 
-        }
 
-        //TODO STEP 3
+        //STEP 3
         if(newMediaObject == "not suitable video decoder"){
+            originalMediaObject.contentDocument.visibilityState = "hidden";
+            if(originalMediaObject == "video/broadcast"){
+                originalMediaObject.contentDocument.readyState = "stopped";
+            }
+            if(isMimeTypeHTML5Video(originalMediaObject.type)){
+                originalMediaObject.contentDocument.readyState = "pause";
+            }
 
         }
+
+        videoplayer = originalMediaObject.firstChild;
+        videoplayer.muted = true;
+        originalMediaObject.style.zIndex = "5";
+        //originalMediaObject.firstChild.mute();
+        videoplayer2 = newMediaObject.firstChild;
+        newMediaObject.style.zIndex = "7";
+        videoplayer2.play();
+        videoplayer2.muted = false;
 
         //STEP 4
         if(newMediaObject.type == "video/broadcast"){
-            if(newMedoaObject.state == "stopped"){
-                newMediaObject.state = "presenting";
+            if(newMediaObject.contentDocument.readyState == "stopped"){
+                newMediaObject.contentDocument.readyState = "presenting";
             }
         }
 
         //STEP 5
-        if(newMediaObject.type == "html5video"){
-            if(newMedoaObject.state == "paused"){
-                newMediaObject.state = "play";
+        if(isMimeTypeHTML5Video(newMediaObject.type)){
+            //NOTE: newMediaObject always in complete state because its an video that was added by external link!
+            if(newMediaObject.contentDocument.readyState == "paused" || newMediaObject.contentDocument.readyState == "complete"){
+                newMediaObject.contentDocument.readyState = "play";
+                newMediaObject.firstChild.play();
             }
         }
 
         //STEP 6 WAIT ASYNC
-        // XXX
+        waitForPresentationState(newMediaObject);
 
         //STEP 7
         if(newMediaObject.type == "video/broadcast" && newMediaObject.onChannelChangeError){
@@ -1211,13 +1242,13 @@
         }
 
         //STEP 8
-        if(newMediaObject.type == "html5video" && newMediaObject.errorEvent){
+        if(isMimeTypeHTML5Video(newMediaObject.type) && newMediaObject.errorEvent){
             return resolve('MediaElementError');
 
         }
 
         //STEP 9
-        newMediaObject.visibility == "visible";
+        newMediaObject.contentDocument.visibilityState = "visible";
         if(newMediaObject.type == "video/broadcast"){
             newMediaObject.audio = "100";
         }else if((isMimeTypeHTML5Video(newMediaObject.type))){
@@ -1225,26 +1256,45 @@
         }
 
         //STEP 10 XXX CHECK WITH EXPERIMENT
-        originalMediaObject.visibility == hidden;
-        originalMediaObject.audio == 0;
+        originalMediaObject.ownerDocument.visibilityState = "hidden";
+        originalMediaObject.firstChild.style.zIndex = 3;
+
+        originalMediaObject.audio = 0;
+        originalMediaObject.muted = true;
 
 
         //STEP 11
         if(originalMediaObject.type == "video/broadcast"){
-            if(originalMediaObject.state == "presenting"){
-                originalMediaObject.state = "presenting";
+            if(originalMediaObject.ownerDocument.readyState == "presenting"){
+                originalMediaObject.ownerDocument.readyState = "presenting";
             }
         }
 
         //STEP 12
         if((isMimeTypeHTML5Video(originalMediaObject.type))){
-            if(!(originalMediaObject.state == "paused")){
-                originalMediaObject.state = "paused";
+            if(!(originalMediaObject.ownerDocument.readyState == "paused")){
+                originalMediaObject.ownerDocument.readyState = "paused";
             }
         }
 
         return resolve("undefined");
     }
+
+    async function waitForPresentationState(newMediaObject) {
+        return new Promise(resolve => {
+          if (newMediaObject.type == "video/broadcast") {
+            if (newMediaObject.readyState == "presenting") {
+              resolve();
+            } else {
+              newMediaObject.addEventListener('loadedmetadata', resolve);
+            }
+          } else if (isMimeTypeHTML5Video(newMediaObject.type)) {
+            newMediaObject.addEventListener('loadeddata', resolve);
+          } else {
+            resolve();
+          }
+        });
+      }
 
     // 8.1.4.4 (and step 8 of 8.1.4.1) - allocate suitable video and audio decoders for newMediaObject
     async function allocateVideoAudioDecoders(originalMediaObject, newMediaObject, timelineSelector, switchTime){
@@ -1317,7 +1367,7 @@
 
     //originalMediaObject, timelineSelector, timelineSource, switchTime, newMediaObject, minimumSwitchPerformanceRequired
     //timeline in newMediaObject if timelineSource false, if true in originalMediaObject
-    result = switchMediaPresentation(document.getElementById('video'),"urn:dvb:css:timeline:pts:1800,3600",true,17,document.getElementById('video2'),"");
+    result = switchMediaPresentation(document.getElementById('video'),"urn:dvb:css:timeline:pts:1800,3600",true,7,document.getElementById('video2'),"");
     checkSwitch(document.getElementById('video'),document.getElementById('video2'),result);
 
 })(

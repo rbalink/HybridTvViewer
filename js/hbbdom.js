@@ -558,31 +558,53 @@ if (pageActivated) {
                     console.log(document.getElementById('video-player2'));
                     var isVideoPlayerAlreadyAdded = oipfPluginObject.children.length > 0;
                     if (!isVideoPlayerAlreadyAdded) {
-                        var videoTag = document.createElement('video');
                         
-                        //videoTag.setAttribute('autoplay', ''); // note: call to bindToCurrentChannel() or play() is doing it
-                        videoTag.setAttribute('loop', '');
-                        videoTag.setAttribute('muted', 'true');
-                        videoTag.setAttribute('style', 'top:inherit; left:inherit; width:inherit; height:inherit;');
                         if(isBroadcastVideo(sType)){
+                            var videoTag = document.createElement('video');
+                        
+                            //videoTag.setAttribute('autoplay', ''); // note: call to bindToCurrentChannel() or play() is doing it
+                            videoTag.setAttribute('loop', '');
+                            videoTag.setAttribute('muted', 'true');
+                            videoTag.setAttribute('style', 'top:inherit; left:inherit; width:inherit; height:inherit;');
                             videoTag.setAttribute('id', 'video-player');
-                            videoTag.src = 'http://clips.vorwaerts-gmbh.de/VfE_html5.mp4' // || localStorage.getItem('tvViewer_broadcast_url'); 
                             videoTag.setAttribute("readyState",'presenting');
                             videoTag.setAttribute("visibility",'true');
-                            videoTag.setAttribute
                             console.log(videoTag.getAttribute('readyState'));
+                            videoTag.src = 'http://clips.vorwaerts-gmbh.de/VfE_html5.mp4' // || localStorage.getItem('tvViewer_broadcast_url'); 
+                            oipfPluginObject.appendChild(videoTag);
                             
                         }else if(isBroadbandVideo(sType)){
-                            videoTag.readyState = "presenting";
+                            const parent = document.getElementById('video2');
+                            const child = document.createElement('video');
+                            child.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+                            child.setAttribute('loop', '');
+                            child.setAttribute('muted', 'true');
+                            child.setAttribute('style', 'top: inherit; left: inherit; width: 100%; height: 100%;');
+                            child.setAttribute('id', 'video-player2');
+                            child.setAttribute('readyState', 'presenting');
+                            child.setAttribute('visibility', 'true');
+                            child.setAttribute('onSeeking', 'false');
+                            child.setAttribute('src', 'https://test-videos.co.uk/vids/jellyfish/mp4/h264/720/Jellyfish_720_10s_1MB.mp4');
+                                                    
+                            parent.appendChild(child);
+                            /*
+                            var videoTag = document.createElement('video2');
+                            //videoTag.setAttribute('autoplay', ''); // note: call to bindToCurrentChannel() or play() is doing it
+                            videoTag.setAttribute('loop', '');
+                            videoTag.setAttribute('muted', 'true');
+                            videoTag.setAttribute('style', 'top:inherit; left:inherit; width:inherit; height:inherit;');
                             videoTag.setAttribute('id', 'video-player2');
                             videoTag.setAttribute("readyState",'HAVE_ENOUGH_DATA');
-                            videoTag.setAttribute("visibility",'false');
+                            videoTag.setAttribute("visibility",'true');
                             videoTag.setAttribute("onSeeking",'false');
+                            videoTag.style.height = "100%";
+                            videoTag.style.width = "100%";
                             videoTag.src =  'https://test-videos.co.uk/vids/jellyfish/mp4/h264/720/Jellyfish_720_10s_1MB.mp4' // || localStorage.getItem('tvViewer_broadcast_url');
                             
+                            oipfPluginObject.appendChild(videoTag);
+                            */
 
                         }
-                        oipfPluginObject.appendChild(videoTag);
                             
                     console.log(document.getElementById('video-player'));
                     console.log(document.getElementById('video-player2'));
