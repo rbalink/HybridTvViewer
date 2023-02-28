@@ -33,6 +33,7 @@
 
 (function(window) {
     // If the extension is not activated for this web page then we do nothing and wait for the user to click on the extension icon ...
+    console.log("HERE BLABLABLA TEST");
     var pageActivated = window.localStorage.getItem('tvViewer_active') == 'true';
     if (pageActivated) {
         console.log('injecting %c HbbTV %c %s ','color:#fff;background-color:#555555;border-radius:3px 0 0 3px;','color:#000;background-color:#ffc107;border-radius:0 3px 3px 0;',window.localStorage.getItem('tvViewer_hbbtv'));
@@ -51,7 +52,8 @@
                 mimeType === 'application/oipfConfiguration' ||
                 mimeType === 'application/oipfDrmAgent' ||
                 mimeType === 'application/oipfParentalControlManager' ||
-                mimeType === 'application/oipfSearchManager';
+                mimeType === 'application/oipfSearchManager' ||
+                mimeType === 'application/hbbtvMediaSwitcher';
             };
             oipfObjectFactory.createVideoBroadcastObject = function() {
                 console.timeStamp && console.timeStamp('createVideoBroadcastObject'); //console.log('createVideoBroadcastObject() ...');
@@ -79,6 +81,7 @@
                 return videoObj;
             };
             oipfObjectFactory.createVideoMpegObject = function() {
+                console.log("TEST");
                 console.timeStamp && console.timeStamp('createVideoMpegObject'); //console.log('createVideoMpegObject() ...');
                 return class VideoMpegObject {
                     onblur(evt) { console.timeStamp && console.timeStamp('createVideoMpegObject.onblur'); }
@@ -95,6 +98,9 @@
                     onDRMRightsError(evt) { console.timeStamp && console.timeStamp('createVideoMpegObject.onDRMRightsError'); }
                 };
                 //return new VideoMpegObject();
+            };
+            oipfObjectFactory.createMediaSwitchAPI = function(){
+                console.log("Test Object Factory");
             };
             oipfObjectFactory.onLowMemory = function() {
                 console.timeStamp && console.timeStamp('onLowMemory');
@@ -135,6 +141,25 @@
             }
             Application.prototype.visible = undefined;
             Application.prototype.privateData = {};
+            Application.prototype.privateData.currentChannel = {
+
+                ccid: null,
+
+                channelType: 0,
+
+                dsd: null,
+
+                idType: 11,
+
+                name: "Das Erste HD",
+
+                onid: "1",
+
+                sid: "10301",
+
+                tsid: "1019",
+
+            }
             Application.prototype.privateData.keyset = {};
             var keyset = Application.prototype.privateData.keyset;
             keyset.RED = 0x1;
@@ -152,6 +177,7 @@
             keyset.setValue = function(value) {
                 keyset.value = value;
             };
+            
             Object.defineProperties(Application.prototype.privateData, {
                 '_document': {
                     value: null,
@@ -169,6 +195,8 @@
                     }
                 }
             });
+            
+
             Application.prototype.privateData.getFreeMem = function() {
                 console.timeStamp && console.timeStamp('Application.getFreeMem');
                 return ((window.performance && window.performance.memory.usedJSHeapSize) || 0);
@@ -334,6 +362,12 @@
 
         // 7.16.5 Extensions for playback of selected media components -----------------
 
+        // 8.1. FastMediaSwitcher API - ETSI TS 103 736-1 V1.1.1 (2020-06)
+
+        (function(hbbtvMediaSwitcher){
+            hbbtvMediaSwitcher.test = "test";
+        })(window.hbbtvMediaSwitcher || (window.hbbtvMediaSwitcher = {}));
+
 
         // Listening to external messages ----------------------------------------------
 
@@ -345,7 +379,28 @@
         })(window.document);*/
 
         //console.log("HbbTV emulator added !");
+
+
+
     }
+
+    
+    // manipulate original video element to make it a broadband video element by manipulating the mime type
+    original = document.getElementsByTagName('object')[2];
+    clone = original.cloneNode(true);
+    clone.contentDocument;
+    clone.type = "video/mpeg";
+    clone.id = "video2";
+    //clone.hidden = "true";
+    clone.style.zIndex = "4";
+    original.style.zIndex = "5";
+    console.log(document.getElementById('videocontainer'));
+    console.log(document.getElementsByTagName('object'));
+    document.getElementById('videocontainer').append(clone);
+    console.log(document.getElementsByTagName('object'));
+    console.log(document.getElementById('video2'));
+    test = document.getElementById('video2');
+
 })(
     typeof self !== 'undefined' && self ||
     typeof window !== 'undefined' && window ||
