@@ -574,6 +574,8 @@ if (pageActivated) {
                             oipfPluginObject.appendChild(videoTag);
                             
                         }else if(isBroadbandVideo(sType)){
+                            
+
                             const parent = document.getElementById('video2');
                             const child = document.createElement('video');
                             child.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
@@ -581,7 +583,7 @@ if (pageActivated) {
                             child.setAttribute('muted', 'true');
                             child.setAttribute('style', 'top: inherit; left: inherit; width: 100%; height: 100%;');
                             child.setAttribute('id', 'video-player2');
-                            child.setAttribute('readyState', 'presenting');
+                            child.setAttribute('readyState', 'HAVE_ENOUGH_DATA');
                             child.setAttribute('visibility', 'true');
                             child.setAttribute('onSeeking', 'false');
                             child.setAttribute('src', 'https://test-videos.co.uk/vids/jellyfish/mp4/h264/720/Jellyfish_720_10s_1MB.mp4');

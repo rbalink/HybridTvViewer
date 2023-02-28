@@ -389,7 +389,7 @@
     original = document.getElementsByTagName('object')[2];
     clone = original.cloneNode(true);
     clone.contentDocument;
-    clone.type = "video/mp4";
+    clone.type = "video/mpeg";
     clone.id = "video2";
     //clone.hidden = "true";
     clone.style.zIndex = "4";
@@ -400,21 +400,7 @@
     console.log(document.getElementsByTagName('object'));
     console.log(document.getElementById('video2'));
     test = document.getElementById('video2');
-    doc = test.contentDocument;
-    doc.documentElement.remove();
-    
 
-    teee = document.getElementsByTagName('div');
-    //console.log(document.getElementsByTagName('div'));
-    //document.createElement(window.oipfObjectFactory.createVideoMpegObject());
-
-
-
-
-
-
-
-    console.log("add something here - ad video");
 })(
     typeof self !== 'undefined' && self ||
     typeof window !== 'undefined' && window ||

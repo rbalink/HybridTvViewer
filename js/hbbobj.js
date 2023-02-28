@@ -889,13 +889,14 @@
             }
 
             if((isMimeTypeHTML5Video(originalMediaObject.type))){
-                if(!(((newMediaObject == 'video/broadcast') || ((isMimeTypeHTML5Video(newMediaObject.type)))) && ((originalMediaObject.firstChild.getAttribute("readyState") == 'HAVE_FUTURE_DATA') || (originalMediaObject.firstChild.getAttribute("readyState") == 'HAVE_FUTURE_DATA'))) ){
+                // NOTE: readyState = 4 == HAVE_ENOUGH_DATA
+                if(!(((newMediaObject.type == 'video/broadcast') || ((isMimeTypeHTML5Video(newMediaObject.type)))) && ((originalMediaObject.firstChild.readyState == '4') || (originalMediaObject.firstChild.getAttribute("readyState") == 'HAVE_FUTURE_DATA'))) ){
                     return reject(new NotSupportedError('Preconditions not met'));
                 }
             }
 
             if(newMediaObject.type == 'video/broadcast'){
-                if(!(newMediaObject.firstChild.getAttribute("visibility") == 'true' && ((newMediaObject.firstChild.getAttribute("readyState") == 'stopped') ||(newMediaObject.firstChild.getAttribute("readyState") == 'presenting')))){
+                if(!(newMediaObject.firstChild.getAttribute("visibility") == 'true' && ((newMediaObject.firstChild.readyState == 'stopped') ||(newMediaObject.firstChild.readyState == 'presenting')||(newMediaObject.firstChild.readyState == '4')))){
                     return reject(new NotSupportedError('Preconditions not met'));
                 }
             }
@@ -948,7 +949,7 @@
             /*
             // check/debug if zIndex correct path is indeed .style.zIndex
             */
-            if(!((originalMediaObject.style.zIndex > newMediaObject.style.zIndex) || ((originalMediaObject.style.zIndex < newMediaObject.style.zIndex)&&(newMediaObject.ownerDocument.visibility == 'hidden')))){
+            if(!((originalMediaObject.style.zIndex > newMediaObject.style.zIndex) || ((originalMediaObject.style.zIndex < newMediaObject.style.zIndex)&&(newMediaObject.firstChild.style.visibility == '')))){
                 return reject(new NotSupportedError('Preconditions not met'));
             }
 
@@ -956,17 +957,15 @@
             if(minimumSwitchPerformanceRequired == ''){
 
             }else{
-                //TODO !!!
                 // profile elements shall be present as child of the ta element
 
-                // UNCLEAR and TODO / ADD in if clause:
+                // UNCLEAR in if clause:
                 // if terminal (?) meets the requirement for profile 1 --> 5.3.2 of ETSI TS 103 736-2 [9]
                 // if terminal (?) meets the requirement for profile 2 --> 5.3.2 of ETSI TS 103 736-2 [9]
                 // additional profile elements --> ETSI TS 103 736-2 [9] listed first
-                if((minimumSwitchPerformanceRequired.version == '1.1.1') && (minimumSwitchPerformanceRequired.children == 'ta Element')){
+                if((minimumSwitchPerformanceRequired.version == '1.1.1') && (minimumSwitchPerformanceRequired.children.name == 'ta')){
                     // Definition 10.2.3
-                    // UNCLEAR: TEMI or PTS supported timeline check
-                    if('TEMI OR PTS broadcast timeline supported'){
+                    if(timeline.startsWith("urn:dvb:css:timeline:temi:") || timelineSelector.startsWith("urn:dvb:css:timeline:pts:") ){
                         if(!(minimumSwitchPerformanceRequired.broadcastTimelineMonitoring == 'true')){
                             return reject(new NotSupportedError('Preconditions not met'));
                         }
@@ -978,7 +977,7 @@
 
                     // Definition 10.4 / Clause 4.2.6
                     // if the terminal is able to maintain state relating to broadcast video and audio after the end of a switch from broadcast to broadband
-                    if('TODO: Definition 10.4 / Clause 4.2.6'){
+                    if('Definition 10.4 / Clause 4.2.6'){
                         if(!(minimumSwitchPerformanceRequired.GOPIndependentSwitchToBroadcast == 'true')){
                             return reject(new NotSupportedError('Preconditions not met'));
 
@@ -1009,8 +1008,8 @@
             // Step 6)
             // 4.2.1 clause - calculated time by timestamp at call and now with switchTime
             var now = new Date();
-            console.log(initNow);
-            console.log(now);
+            //console.log(initNow);
+            //console.log(now);
             if (timelineSelector != null && ((initNow <= now) || (switchTime >= now.getTime()+10*60000))) {
               return resolve("InThePast");
             }
@@ -1029,10 +1028,10 @@
             if(Date.now() > (prepTimeSwitchTimeDate)){
                 return resolve('SwitchPreparationDeadlinePassed');
             }
-            console.log(initNow - Date.now());
             waitingTime = initNow - Date.now();
 
             //Step 5 of 8.1.4.2
+            console.log("waiting Time is :" +waitingTime);
             setTimeout(function() {
                 // Invoke the algorithm for allocating suitable decoders for newMediaObject
                 // Step 8) of 8.1.4.1 Allocate suitable Video and start of Definition 8.1.4.4
@@ -1150,6 +1149,7 @@
 
     // 8.1.4.2
     function checkSwitch(originalMediaObject, promise){
+        /*
         promise
         .then(function(error) {
             if((originalMediaObject.type == "video/broadcast") && originalMediaObject.onChannelChangeSucceeded == true ){
@@ -1169,115 +1169,133 @@
             //TODO clause 10.2.7 user make changes to terminal audio language - terminal audio language not in scope
 
         })
+        */
     }
 
     // 8.1.4.3 executing the switch
     function executingSwitch(originalMediaObject, newMediaObject,timelineSelector, switchTime, timelineTime, minimumSwitchPerformanceRequired){
-        if(timelineSelector == null){
-            return reject(new InvalidStateError('Timeline Selector null'));
-        }
-        if(timelineSelector != null && (timelineTime > switchTime)){
-            return reject(new InvalidStateError('Switch time is in the past'));
-        }
-        if(originalMediaObject.type == "html5video" && originalMediaObject.detectedPlayback && timelineTime > switchTime){
-            return reject(new InvalidStateError('Switch time is in the past'));
-        }
-
-        /**
-         * Unclear how this translate into code: "Performance Profile"
-         * 
-         * If minimumSwitchPerformanceRequired is a URN that identifies a performance profile supported by the
-            terminal and it is known to the terminal that the requirements of that performance profile will not be met then
-            resolve promise with "NoPerformanceProfileMet"
-        */
-        // if(minimumSwitchPerformanceRequired == "URN supported but not met"){
-        //    return reject(new NoPerformanceProfileMet('No Performance Profile Met'));
-        //}
-
-
-        //STEP 3
-        if(newMediaObject == "not suitable video decoder"){
-            originalMediaObject.contentDocument.visibilityState = "hidden";
-            if(originalMediaObject == "video/broadcast"){
-                originalMediaObject.contentDocument.readyState = "stopped";
+        return new Promise(function(resolve,reject){
+            console.log("switch in progress");
+            if(timelineSelector == null){
+                return reject(new InvalidStateError('Timeline Selector null'));
             }
-            if(isMimeTypeHTML5Video(originalMediaObject.type)){
-                originalMediaObject.contentDocument.readyState = "pause";
+            if(timelineSelector != null && (timelineTime > switchTime)){
+                return reject(new InvalidStateError('Switch time is in the past'));
+            }
+            if(originalMediaObject.type == "html5video" && originalMediaObject.detectedPlayback && timelineTime > switchTime){
+                return reject(new InvalidStateError('Switch time is in the past'));
             }
 
-        }
+            /**
+             * Unclear how this translate into code: "Performance Profile"
+             * 
+             * If minimumSwitchPerformanceRequired is a URN that identifies a performance profile supported by the
+                terminal and it is known to the terminal that the requirements of that performance profile will not be met then
+                resolve promise with "NoPerformanceProfileMet"
+            */
+            // if(minimumSwitchPerformanceRequired == "URN supported but not met"){
+            //    return reject(new NoPerformanceProfileMet('No Performance Profile Met'));
+            //}
 
-        videoplayer = originalMediaObject.firstChild;
-        videoplayer.muted = true;
-        originalMediaObject.style.zIndex = "5";
-        //originalMediaObject.firstChild.mute();
-        videoplayer2 = newMediaObject.firstChild;
-        newMediaObject.style.zIndex = "7";
-        videoplayer2.play();
-        videoplayer2.muted = false;
 
-        //STEP 4
-        if(newMediaObject.type == "video/broadcast"){
-            if(newMediaObject.contentDocument.readyState == "stopped"){
-                newMediaObject.contentDocument.readyState = "presenting";
+            /** old code snippet for testing
+             * 
+            videoplayer = originalMediaObject.firstChild;
+            videoplayer.muted = true;
+            originalMediaObject.style.zIndex = "5";
+            //originalMediaObject.firstChild.mute();
+            videoplayer2 = newMediaObject.firstChild;
+            newMediaObject.style.zIndex = "7";
+            videoplayer2.play();
+            videoplayer2.muted = false;
+             * 
+             */
+
+
+            //STEP 3
+            // assumption: no suitable video decoder for newMediaObject if no
+            if(newMediaObject == "not suitable video decoder"){
+                originalMediaObject.contentDocument.visibilityState = "hidden";
+                if(originalMediaObject == "video/broadcast"){
+                    originalMediaObject.contentDocument.readyState = "stopped";
+                }
+                if(isMimeTypeHTML5Video(originalMediaObject.type)){
+                    originalMediaObject.contentDocument.readyState = "pause";
+                }
+
             }
-        }
 
-        //STEP 5
-        if(isMimeTypeHTML5Video(newMediaObject.type)){
-            //NOTE: newMediaObject always in complete state because its an video that was added by external link!
-            if(newMediaObject.contentDocument.readyState == "paused" || newMediaObject.contentDocument.readyState == "complete"){
-                newMediaObject.contentDocument.readyState = "play";
-                newMediaObject.firstChild.play();
+        
+            //STEP 4
+            if(newMediaObject.type == "video/broadcast"){
+                if(newMediaObject.firstChild.readyState == "4"){
+                    newMediaObject.firstChild.readyState = "presenting";
+                    newMediaObject.firstChild.style.visibility = "visible";
+                }
             }
-        }
 
-        //STEP 6 WAIT ASYNC
-        waitForPresentationState(newMediaObject);
-
-        //STEP 7
-        if(newMediaObject.type == "video/broadcast" && newMediaObject.onChannelChangeError){
-            return resolve('VideoBroadcastPresentingFailed');
-
-        }
-
-        //STEP 8
-        if(isMimeTypeHTML5Video(newMediaObject.type) && newMediaObject.errorEvent){
-            return resolve('MediaElementError');
-
-        }
-
-        //STEP 9
-        newMediaObject.contentDocument.visibilityState = "visible";
-        if(newMediaObject.type == "video/broadcast"){
-            newMediaObject.audio = "100";
-        }else if((isMimeTypeHTML5Video(newMediaObject.type))){
-            newMediaObject.volume = "1,0";
-        }
-
-        //STEP 10 XXX CHECK WITH EXPERIMENT
-        originalMediaObject.ownerDocument.visibilityState = "hidden";
-        originalMediaObject.firstChild.style.zIndex = 3;
-
-        originalMediaObject.audio = 0;
-        originalMediaObject.muted = true;
-
-
-        //STEP 11
-        if(originalMediaObject.type == "video/broadcast"){
-            if(originalMediaObject.ownerDocument.readyState == "presenting"){
-                originalMediaObject.ownerDocument.readyState = "presenting";
+            //STEP 5
+            if(isMimeTypeHTML5Video(newMediaObject.type)){
+                //NOTE: 4 == have enough data which means paused
+                if(newMediaObject.firstChild.readyState == "paused" || newMediaObject.firstChild.readyState == "4"){
+                    newMediaObject.firstChild.readyState = "play";
+                    newMediaObject.firstChild.play();
+                }
             }
-        }
 
-        //STEP 12
-        if((isMimeTypeHTML5Video(originalMediaObject.type))){
-            if(!(originalMediaObject.ownerDocument.readyState == "paused")){
-                originalMediaObject.ownerDocument.readyState = "paused";
+            //STEP 6 WAIT ASYNC
+            waitForPresentationState(newMediaObject);
+
+            //STEP 7
+            if(newMediaObject.type == "video/broadcast" && newMediaObject.onChannelChangeError == "true"){
+                return resolve('VideoBroadcastPresentingFailed');
+
             }
-        }
 
-        return resolve("undefined");
+            //STEP 8
+            if(isMimeTypeHTML5Video(newMediaObject.type) && newMediaObject.errorEvent){
+                return resolve('MediaElementError');
+
+            }
+
+            //STEP 9
+            newMediaObject.firstChild.visibilityState = "visible";
+            // NOTE: video/broadcast doesnt have audio attribute
+            if(newMediaObject.type == "video/broadcast"){
+                //newMediaObject.firstChild.audio = "100";
+                newMediaObject.firstChild.volume = 1.0;
+            }else if((isMimeTypeHTML5Video(newMediaObject.type))){
+                newMediaObject.firstChild.volume = 1.0;
+            }
+
+            //STEP 10
+            originalMediaObject.firstChild.style.visibility = "hidden";
+            //originalMediaObject.firstChild.style.zIndex = 3;
+            //newMediaObject.firstChild.style.zIndex = 5;
+            
+            originalMediaObject.firstChild.volume = 0.0;
+
+
+
+
+            //STEP 11
+            if(originalMediaObject.type == "video/broadcast"){
+                if(originalMediaObject.firstChild.readyState == "presenting"){
+                    originalMediaObject.firstChild.readyState = "presenting";
+                }
+            }
+
+            //STEP 12
+            if((isMimeTypeHTML5Video(originalMediaObject.type))){
+                if(!(originalMediaObject.firstChild.readyState == "paused")){
+                    originalMediaObject.firstChild.readyState = "paused";
+                }
+            }
+            console.log("switch performed");
+
+            //resolve is undefined
+            return resolve('undefined');
+        });
     }
 
     async function waitForPresentationState(newMediaObject) {
@@ -1339,7 +1357,7 @@
 
     //returns true if MIME type is html5 video
     function isMimeTypeHTML5Video(type){
-        if((type == 'video/mp4') || (type=='video/webm') || (type=='video/ogg')){
+        if((type == 'video/mp4') || (type=='video/webm') || (type=='video/ogg') || (type=='video/mpeg')){
             return true;
         }else{
             return false;
@@ -1348,27 +1366,21 @@
     }
 
 
-    // just for testing / not important
-    //NotSupportedError.prototype = Error.prototype;
-
-    //call the method
 
     broadbandTestVideo = window.oipfObjectFactory.createVideoMpegObject();
     // just add a listener on new <OBJECT> tags that will be animated when newly created ...
     window.document.addEventListener(window.CSS.supports('animation', '0s') ? 'animationstart' : 'webkitAnimationStart', onAnimationStart, true);
-    console.log(document.getElementById('video-player'));
-    console.log(document.getElementById('video'));
-    console.log(document.getElementById('video2'));
-
-    //timelineSelector == URN
-    //timelineSource == boolean ob in newMediaObject timeline inside
-    //switchTime == if URN its the switch time else null
-    //minimumSwitchPerformanceRequired == performance profile
+    //console.log(document.getElementById('video-player'));
+    //console.log(document.getElementById('video'));
+    //console.log(document.getElementById('video2'));
 
     //originalMediaObject, timelineSelector, timelineSource, switchTime, newMediaObject, minimumSwitchPerformanceRequired
     //timeline in newMediaObject if timelineSource false, if true in originalMediaObject
-    result = switchMediaPresentation(document.getElementById('video'),"urn:dvb:css:timeline:pts:1800,3600",true,7,document.getElementById('video2'),"");
+    console.log("first switch announced");
+    result = switchMediaPresentation(document.getElementById('video'),"urn:dvb:css:timeline:pts:1800,3600",true,5,document.getElementById('video2'),"");
     checkSwitch(document.getElementById('video'),document.getElementById('video2'),result);
+    console.log("second switch announced");
+    result2 = switchMediaPresentation(document.getElementById('video2'),"urn:dvb:css:timeline:mpd:period:rel:1535502844",true,15,document.getElementById('video'),"");
 
 })(
     typeof self !== 'undefined' && self ||
